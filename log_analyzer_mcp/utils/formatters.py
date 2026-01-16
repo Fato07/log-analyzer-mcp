@@ -7,17 +7,16 @@ from typing import Any
 from pydantic import BaseModel
 
 from log_analyzer_mcp.models import (
+    ErrorGroup,
+    ExtractErrorsResult,
     LogLevel,
+    LogSummary,
     ParsedLogEntry,
     ParseResult,
     SearchResult,
-    ExtractErrorsResult,
-    LogSummary,
     TailResult,
-    ErrorGroup,
 )
 from log_analyzer_mcp.utils.time_utils import format_timestamp, time_ago
-
 
 # ============================================================================
 # Constants

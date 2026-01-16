@@ -1,7 +1,6 @@
 """Generic timestamp-based log parser."""
 
 import re
-from datetime import datetime
 from typing import ClassVar
 
 from log_analyzer_mcp.models import LogLevel, ParsedLogEntry
@@ -28,7 +27,7 @@ class GenericParser(BaseLogParser):
     patterns: ClassVar[list[str]] = [
         r"\d{4}-\d{2}-\d{2}",  # ISO date
         r"\d{2}/\d{2}/\d{4}",  # US/EU date
-        r"\b1[0-9]{9}\b",      # Unix timestamp
+        r"\b1[0-9]{9}\b",  # Unix timestamp
     ]
 
     # Log level patterns (case-insensitive)
@@ -74,11 +73,7 @@ class GenericParser(BaseLogParser):
                 return True
 
         # Check for any log level keyword as fallback
-        for pattern, _ in self.LEVEL_PATTERNS:
-            if pattern.search(line):
-                return True
-
-        return False
+        return any(pattern.search(line) for pattern, _ in self.LEVEL_PATTERNS)
 
     def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
         """Parse a line using generic extraction."""
@@ -164,7 +159,7 @@ class GenericParser(BaseLogParser):
         for pattern, _ in self.LEVEL_PATTERNS:
             match = pattern.match(message)
             if match:
-                remaining = message[match.end():].lstrip(" -:|\t")
+                remaining = message[match.end() :].lstrip(" -:|\t")
                 if remaining:
                     message = remaining
                 break
@@ -174,8 +169,9 @@ class GenericParser(BaseLogParser):
     def _looks_like_json(self, line: str) -> bool:
         """Check if line looks like JSON."""
         stripped = line.strip()
-        return (stripped.startswith("{") and stripped.endswith("}")) or \
-               (stripped.startswith("[") and stripped.endswith("]"))
+        return (stripped.startswith("{") and stripped.endswith("}")) or (
+            stripped.startswith("[") and stripped.endswith("]")
+        )
 
     def _looks_like_csv(self, line: str) -> bool:
         """Check if line looks like CSV."""
@@ -222,7 +218,7 @@ class GenericParser(BaseLogParser):
                 if entry.level:
                     level_found += 1
 
-        total = len([l for l in sample_lines if l.strip()])
+        total = len([line for line in sample_lines if line.strip()])
         if total == 0:
             return 0.0
 

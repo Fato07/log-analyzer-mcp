@@ -56,8 +56,7 @@ class DockerParser(BaseLogParser):
 
         # Check for native format with ISO timestamp and stream
         if re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", line):
-            if "stdout" in line[:60] or "stderr" in line[:60]:
-                return True
+            return "stdout" in line[:60] or "stderr" in line[:60]
 
         return False
 

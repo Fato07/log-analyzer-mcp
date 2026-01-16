@@ -7,14 +7,15 @@ from typing import Final
 from dateutil import parser as dateutil_parser
 from dateutil.tz import tzlocal
 
-
 # ============================================================================
 # Common Timestamp Patterns
 # ============================================================================
 
 # ISO 8601 variants
 ISO_8601_PATTERN: Final[str] = r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}"
-ISO_8601_WITH_TZ: Final[str] = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})"
+ISO_8601_WITH_TZ: Final[str] = (
+    r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})"
+)
 ISO_8601_WITH_MILLIS: Final[str] = r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}[.,]\d{3,9}"
 
 # Syslog format (Jan 15 10:30:00)
@@ -144,13 +145,25 @@ def _try_parse_unix_epoch(value: str) -> datetime | None:
 def _try_parse_apache_timestamp(value: str) -> datetime | None:
     """Try to parse Apache/Nginx timestamp format."""
     # Pattern: [15/Jan/2026:10:30:00 +0000] or 15/Jan/2026:10:30:00 +0000
-    pattern = _get_compiled_pattern(r"(\d{2})/([A-Z][a-z]{2})/(\d{4}):(\d{2}):(\d{2}):(\d{2})\s*([+-]\d{4})")
+    pattern = _get_compiled_pattern(
+        r"(\d{2})/([A-Z][a-z]{2})/(\d{4}):(\d{2}):(\d{2}):(\d{2})\s*([+-]\d{4})"
+    )
     match = pattern.search(value)
     if match:
         day, month, year, hour, minute, second, tz_offset = match.groups()
         month_map = {
-            "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-            "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+            "Jan": 1,
+            "Feb": 2,
+            "Mar": 3,
+            "Apr": 4,
+            "May": 5,
+            "Jun": 6,
+            "Jul": 7,
+            "Aug": 8,
+            "Sep": 9,
+            "Oct": 10,
+            "Nov": 11,
+            "Dec": 12,
         }
         try:
             # Parse timezone offset
@@ -158,8 +171,12 @@ def _try_parse_apache_timestamp(value: str) -> datetime | None:
             tz_minutes = int(tz_offset[0] + tz_offset[3:5])
             tz = timezone(timedelta(hours=tz_hours, minutes=tz_minutes))
             return datetime(
-                int(year), month_map[month], int(day),
-                int(hour), int(minute), int(second),
+                int(year),
+                month_map[month],
+                int(day),
+                int(hour),
+                int(minute),
+                int(second),
                 tzinfo=tz,
             )
         except (KeyError, ValueError):
@@ -177,9 +194,14 @@ def _try_parse_rfc3339_nano(value: str) -> datetime | None:
             # Convert nanoseconds to microseconds (Python datetime max precision)
             micros = int(nanos[:6])
             return datetime(
-                int(year), int(month), int(day),
-                int(hour), int(minute), int(second),
-                micros, tzinfo=timezone.utc,
+                int(year),
+                int(month),
+                int(day),
+                int(hour),
+                int(minute),
+                int(second),
+                micros,
+                tzinfo=timezone.utc,
             )
         except ValueError:
             pass
@@ -193,15 +215,29 @@ def _try_parse_syslog_timestamp(value: str, default_year: int | None = None) -> 
     if match:
         month_str, day, hour, minute, second = match.groups()
         month_map = {
-            "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-            "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+            "Jan": 1,
+            "Feb": 2,
+            "Mar": 3,
+            "Apr": 4,
+            "May": 5,
+            "Jun": 6,
+            "Jul": 7,
+            "Aug": 8,
+            "Sep": 9,
+            "Oct": 10,
+            "Nov": 11,
+            "Dec": 12,
         }
         try:
             month = month_map[month_str]
             year = default_year or datetime.now().year
             return datetime(
-                year, month, int(day),
-                int(hour), int(minute), int(second),
+                year,
+                month,
+                int(day),
+                int(hour),
+                int(minute),
+                int(second),
                 tzinfo=tzlocal(),
             )
         except (KeyError, ValueError):
@@ -309,7 +345,9 @@ def format_time_range(
         days = total_seconds // 86400
         duration_str = f"{days} day{'s' if days > 1 else ''}"
 
-    return f"{format_timestamp(start, 'human')} to {format_timestamp(end, 'human')} ({duration_str})"
+    return (
+        f"{format_timestamp(start, 'human')} to {format_timestamp(end, 'human')} ({duration_str})"
+    )
 
 
 # ============================================================================
@@ -357,7 +395,9 @@ def parse_relative_time(value: str, reference: datetime | None = None) -> dateti
         return reference - timedelta(days=30)
 
     # Parse "X unit ago" patterns
-    pattern = _get_compiled_pattern(r"(\d+)\s*(s|sec|second|seconds?|m|min|minute|minutes?|h|hr|hour|hours?|d|day|days?|w|week|weeks?)\s*ago")
+    pattern = _get_compiled_pattern(
+        r"(\d+)\s*(s|sec|second|seconds?|m|min|minute|minutes?|h|hr|hour|hours?|d|day|days?|w|week|weeks?)\s*ago"
+    )
     match = pattern.match(value)
     if match:
         amount = int(match.group(1))

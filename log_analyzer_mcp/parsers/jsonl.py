@@ -1,7 +1,6 @@
 """JSON Lines (JSONL) structured log parser."""
 
 import json
-import re
 from datetime import datetime
 from typing import Any, ClassVar
 
@@ -33,18 +32,41 @@ class JSONLParser(BaseLogParser):
 
     # Common field name mappings
     TIMESTAMP_FIELDS = [
-        "timestamp", "time", "ts", "@timestamp", "datetime", "date",
-        "t", "created", "logged_at", "event_time", "log_time",
+        "timestamp",
+        "time",
+        "ts",
+        "@timestamp",
+        "datetime",
+        "date",
+        "t",
+        "created",
+        "logged_at",
+        "event_time",
+        "log_time",
     ]
 
     LEVEL_FIELDS = [
-        "level", "severity", "log_level", "loglevel", "lvl",
-        "priority", "sev", "levelname", "log.level",
+        "level",
+        "severity",
+        "log_level",
+        "loglevel",
+        "lvl",
+        "priority",
+        "sev",
+        "levelname",
+        "log.level",
     ]
 
     MESSAGE_FIELDS = [
-        "message", "msg", "text", "log", "body",
-        "event", "description", "content", "data",
+        "message",
+        "msg",
+        "text",
+        "log",
+        "body",
+        "event",
+        "description",
+        "content",
+        "data",
     ]
 
     # Bunyan numeric levels

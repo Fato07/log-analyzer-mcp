@@ -2,12 +2,12 @@
 
 import re
 from collections import deque
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from ..parsers.base import BaseLogParser, ParsedLogEntry
-
 
 # Output limits
 MAX_MATCHES = 100
@@ -17,6 +17,7 @@ MAX_CONTEXT_LINES = 5
 @dataclass
 class SearchMatch:
     """A single search match with context."""
+
     line_number: int
     entry: ParsedLogEntry
     context_before: list[str] = field(default_factory=list)
@@ -43,6 +44,7 @@ class SearchMatch:
 @dataclass
 class SearchResult:
     """Result of a pattern search."""
+
     query: str
     total_matches: int = 0
     total_lines_scanned: int = 0
@@ -74,9 +76,9 @@ class PatternMatcher:
         context_before: int = 2,
         context_after: int = 2,
         max_matches: int = MAX_MATCHES,
-        level_filter: Optional[list[str]] = None,
-        time_start: Optional[datetime] = None,
-        time_end: Optional[datetime] = None
+        level_filter: list[str] | None = None,
+        time_start: datetime | None = None,
+        time_end: datetime | None = None,
     ):
         """
         Initialize pattern matcher.
@@ -98,7 +100,7 @@ class PatternMatcher:
         self.context_before = min(context_before, MAX_CONTEXT_LINES)
         self.context_after = min(context_after, MAX_CONTEXT_LINES)
         self.max_matches = min(max_matches, MAX_MATCHES)
-        self.level_filter = set(l.upper() for l in level_filter) if level_filter else None
+        self.level_filter = {level.upper() for level in level_filter} if level_filter else None
         self.time_start = time_start
         self.time_end = time_end
 
@@ -108,7 +110,7 @@ class PatternMatcher:
             try:
                 self._pattern = re.compile(pattern, flags)
             except re.error as e:
-                raise ValueError(f"Invalid regex pattern: {e}")
+                raise ValueError(f"Invalid regex pattern: {e}") from e
         else:
             # Escape special characters for plain text search
             escaped = re.escape(pattern)
@@ -125,7 +127,7 @@ class PatternMatcher:
         # Pending matches waiting for context_after
         self._pending_matches: list[tuple[SearchMatch, int]] = []  # (match, remaining_after)
 
-    def _passes_level_filter(self, level: Optional[str]) -> bool:
+    def _passes_level_filter(self, level: str | None) -> bool:
         """Check if entry passes level filter."""
         if self.level_filter is None:
             return True
@@ -133,16 +135,14 @@ class PatternMatcher:
             return False
         return level.upper() in self.level_filter
 
-    def _passes_time_filter(self, timestamp: Optional[datetime]) -> bool:
+    def _passes_time_filter(self, timestamp: datetime | None) -> bool:
         """Check if entry passes time filter."""
         if timestamp is None:
             # If no timestamp, pass if no time filters are set
             return self.time_start is None and self.time_end is None
         if self.time_start and timestamp < self.time_start:
             return False
-        if self.time_end and timestamp > self.time_end:
-            return False
-        return True
+        return not (self.time_end and timestamp > self.time_end)
 
     def _find_highlights(self, text: str) -> list[tuple[int, int]]:
         """Find all match positions in text for highlighting."""
@@ -162,7 +162,7 @@ class PatternMatcher:
             # When remaining reaches 0, the match is complete
         self._pending_matches = still_pending
 
-    def process_entry(self, entry: ParsedLogEntry, raw_line: Optional[str] = None) -> None:
+    def process_entry(self, entry: ParsedLogEntry, raw_line: str | None = None) -> None:
         """
         Process a single log entry.
 
@@ -203,7 +203,7 @@ class PatternMatcher:
                 entry=entry,
                 context_before=list(self._context_buffer),
                 context_after=[],
-                highlight_ranges=highlights
+                highlight_ranges=highlights,
             )
 
             self._matches.append(match)
@@ -227,14 +227,11 @@ class PatternMatcher:
             total_matches=self._total_matches,
             total_lines_scanned=self._total_lines,
             matches=self._matches,
-            truncated=self._total_matches > len(self._matches)
+            truncated=self._total_matches > len(self._matches),
         )
 
     def search_file(
-        self,
-        parser: BaseLogParser,
-        file_path: str,
-        max_lines: int = 10000
+        self, parser: BaseLogParser, file_path: str, max_lines: int = 10000
     ) -> SearchResult:
         """
         Search a log file for patterns.
@@ -252,10 +249,7 @@ class PatternMatcher:
         return self.finalize()
 
     def search_raw_file(
-        self,
-        file_path: str,
-        max_lines: int = 10000,
-        encoding: str = "utf-8"
+        self, file_path: str, max_lines: int = 10000, encoding: str = "utf-8"
     ) -> SearchResult:
         """
         Search a raw file without parsing.
@@ -269,12 +263,12 @@ class PatternMatcher:
             SearchResult with all matches
         """
         try:
-            with open(file_path, 'r', encoding=encoding, errors='replace') as f:
+            with open(file_path, encoding=encoding, errors="replace") as f:
                 for line_number, line in enumerate(f, start=1):
                     if line_number > max_lines:
                         break
 
-                    line = line.rstrip('\n\r')
+                    line = line.rstrip("\n\r")
 
                     # Create a minimal ParsedLogEntry for raw search
                     entry = ParsedLogEntry(
@@ -283,7 +277,7 @@ class PatternMatcher:
                         timestamp=None,
                         level=None,
                         message=line,
-                        metadata={}
+                        metadata={},
                     )
                     self.process_entry(entry, raw_line=line)
         except Exception:
@@ -291,10 +285,7 @@ class PatternMatcher:
 
         return self.finalize()
 
-    def search_entries(
-        self,
-        entries: Iterator[ParsedLogEntry]
-    ) -> SearchResult:
+    def search_entries(self, entries: Iterator[ParsedLogEntry]) -> SearchResult:
         """
         Search an iterator of entries.
 
@@ -318,10 +309,10 @@ def search_pattern(
     context_before: int = 2,
     context_after: int = 2,
     max_matches: int = MAX_MATCHES,
-    level_filter: Optional[list[str]] = None,
-    time_start: Optional[datetime] = None,
-    time_end: Optional[datetime] = None,
-    max_lines: int = 10000
+    level_filter: list[str] | None = None,
+    time_start: datetime | None = None,
+    time_end: datetime | None = None,
+    max_lines: int = 10000,
 ) -> SearchResult:
     """
     Convenience function to search for patterns in a log file.
@@ -352,6 +343,6 @@ def search_pattern(
         max_matches=max_matches,
         level_filter=level_filter,
         time_start=time_start,
-        time_end=time_end
+        time_end=time_end,
     )
     return matcher.search_file(parser, file_path, max_lines=max_lines)

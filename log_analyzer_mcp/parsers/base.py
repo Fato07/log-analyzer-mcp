@@ -1,11 +1,14 @@
 """Base parser interface for all log format parsers."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from datetime import datetime
-from typing import Any, ClassVar, Iterator
+from typing import Any, ClassVar
 
 from log_analyzer_mcp.models import LogLevel, ParsedLogEntry
 from log_analyzer_mcp.utils.file_handler import stream_file
+
+__all__ = ["BaseLogParser", "ParsedLogEntry", "LogLevel"]
 
 
 class BaseLogParser(ABC):
@@ -124,7 +127,7 @@ class BaseLogParser(ABC):
                     # Parser extracted something different from raw line
                     parsed_count += 0.5
 
-        total_lines = len([l for l in sample_lines if l.strip()])
+        total_lines = len([line for line in sample_lines if line.strip()])
         if total_lines == 0:
             return 0.0
 

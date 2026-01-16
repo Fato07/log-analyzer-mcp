@@ -40,9 +40,7 @@ class PythonLogParser(MultiLineParser):
     )
 
     # Basic format: LEVEL:module:message
-    BASIC_PATTERN = re.compile(
-        r"^(?P<level>[A-Z]+):(?P<module>[^:]+):(?P<message>.*)$"
-    )
+    BASIC_PATTERN = re.compile(r"^(?P<level>[A-Z]+):(?P<module>[^:]+):(?P<message>.*)$")
 
     # Bracket format: [2026-01-15 10:30:00] LEVEL module: message
     BRACKET_PATTERN = re.compile(
@@ -72,16 +70,17 @@ class PythonLogParser(MultiLineParser):
             return False
 
         # Check for standard patterns
-        for pattern in [self.DEFAULT_PATTERN, self.BASIC_PATTERN,
-                        self.BRACKET_PATTERN, self.ALT_PATTERN]:
+        for pattern in [
+            self.DEFAULT_PATTERN,
+            self.BASIC_PATTERN,
+            self.BRACKET_PATTERN,
+            self.ALT_PATTERN,
+        ]:
             if pattern.match(line):
                 return True
 
         # Check for traceback
-        if self.TRACEBACK_START.match(line):
-            return True
-
-        return False
+        return bool(self.TRACEBACK_START.match(line))
 
     def is_continuation(self, line: str) -> bool:
         """Check if line is a stack trace continuation."""
@@ -105,10 +104,7 @@ class PythonLogParser(MultiLineParser):
             return True
 
         # Continuation of multi-line message
-        if line.startswith("  "):
-            return True
-
-        return False
+        return line.startswith("  ")
 
     def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
         """Parse a Python log line."""
@@ -116,8 +112,12 @@ class PythonLogParser(MultiLineParser):
             return None
 
         # Try each pattern
-        for pattern in [self.DEFAULT_PATTERN, self.BRACKET_PATTERN,
-                        self.ALT_PATTERN, self.BASIC_PATTERN]:
+        for pattern in [
+            self.DEFAULT_PATTERN,
+            self.BRACKET_PATTERN,
+            self.ALT_PATTERN,
+            self.BASIC_PATTERN,
+        ]:
             match = pattern.match(line)
             if match:
                 return self._create_entry_from_match(match, line, line_number)

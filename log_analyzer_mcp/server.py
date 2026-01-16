@@ -8,29 +8,24 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from log_analyzer_mcp.analyzers import (
+    Correlator,
+    ErrorExtractor,
+    Summarizer,
+)
 from log_analyzer_mcp.models import (
     LogFormat,
-    ResponseFormat,
     ParsedLogEntry,
 )
 from log_analyzer_mcp.parsers import (
+    PARSER_REGISTRY,
     detect_format,
     get_parser,
-    PARSER_REGISTRY,
-)
-from log_analyzer_mcp.analyzers import (
-    ErrorExtractor,
-    PatternMatcher,
-    Summarizer,
-    Correlator,
 )
 from log_analyzer_mcp.utils import (
     read_tail,
     stream_file,
-    format_as_markdown,
-    format_as_json,
 )
-
 
 # Initialize FastMCP server
 mcp = FastMCP(
@@ -81,7 +76,7 @@ def _format_level_chart(level_counts: dict[str, int], total: int) -> str:
         return "No log levels detected"
 
     lines = []
-    max_label_len = max(len(level) for level in level_counts.keys())
+    max_label_len = max(len(level) for level in level_counts)
 
     for level, count in sorted(level_counts.items(), key=lambda x: -x[1]):
         pct = (count / total) * 100
@@ -108,14 +103,7 @@ def _entry_to_dict(entry: ParsedLogEntry) -> dict[str, Any]:
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_parse(
     file_path: str,
     format_hint: str | None = None,
@@ -170,7 +158,9 @@ def log_analyzer_parse(
 
                 # Track levels
                 if entry.level:
-                    level_str = entry.level.value if hasattr(entry.level, 'value') else str(entry.level)
+                    level_str = (
+                        entry.level.value if hasattr(entry.level, "value") else str(entry.level)
+                    )
                     level_counts[level_str] = level_counts.get(level_str, 0) + 1
 
                 # Track time range
@@ -212,15 +202,15 @@ def log_analyzer_parse(
 
 **File:** `{file_path}`
 **Format:** {parser.name} (confidence: {confidence:.0%})
-**Size:** {file_info['size_human']}
+**Size:** {file_info["size_human"]}
 
 ### Lines Processed
 - **Total:** {total_lines:,}
-- **Parsed:** {parsed_lines:,} ({result['lines']['parse_rate']}%)
+- **Parsed:** {parsed_lines:,} ({round(parsed_lines / total_lines * 100, 1) if total_lines > 0 else 0}%)
 
 ### Time Range
-- **Start:** {time_start.isoformat() if time_start else 'N/A'}
-- **End:** {time_end.isoformat() if time_end else 'N/A'}
+- **Start:** {time_start.isoformat() if time_start else "N/A"}
+- **End:** {time_end.isoformat() if time_end else "N/A"}
 
 ### Level Distribution
 ```
@@ -245,14 +235,7 @@ def log_analyzer_parse(
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_search(
     file_path: str,
     pattern: str,
@@ -316,7 +299,9 @@ def log_analyzer_search(
                 entry = parser.parse_line(line, line_num)
 
                 if level_filter_upper and entry and entry.level:
-                    entry_level = entry.level.value if hasattr(entry.level, 'value') else str(entry.level)
+                    entry_level = (
+                        entry.level.value if hasattr(entry.level, "value") else str(entry.level)
+                    )
                     if entry_level.upper() != level_filter_upper:
                         continue
 
@@ -325,22 +310,27 @@ def log_analyzer_search(
                 if len(matches) < max_matches:
                     # Get context before
                     context_before = [
-                        l for n, l in line_buffer[:-1]
+                        line
+                        for n, line in line_buffer[:-1]
                         if n < line_num and n >= line_num - context_lines
                     ]
 
-                    matches.append({
-                        "line_number": line_num,
-                        "line": line,
-                        "context_before": context_before,
-                        "context_after": [],  # Will be filled after
-                        "timestamp": entry.timestamp.isoformat() if entry and entry.timestamp else None,
-                        "level": entry.level.value if entry and entry.level else None,
-                    })
+                    matches.append(
+                        {
+                            "line_number": line_num,
+                            "line": line,
+                            "context_before": context_before,
+                            "context_after": [],  # Will be filled after
+                            "timestamp": entry.timestamp.isoformat()
+                            if entry and entry.timestamp
+                            else None,
+                            "level": entry.level.value if entry and entry.level else None,
+                        }
+                    )
 
         # Fill context_after (simplified - read file again for context)
         if matches and context_lines > 0:
-            all_lines = {line_num: line for line_num, line in stream_file(file_path)}
+            all_lines = dict(stream_file(file_path))
             for match in matches:
                 ln = match["line_number"]
                 match["context_after"] = [
@@ -367,13 +357,13 @@ def log_analyzer_search(
         md = f"""## Search Results
 
 **File:** `{file_path}`
-**Pattern:** `{pattern}` {'(regex)' if is_regex else '(text)'}
-**Matches:** {len(matches)} shown / {total_matches} total{' (truncated)' if total_matches > max_matches else ''}
+**Pattern:** `{pattern}` {"(regex)" if is_regex else "(text)"}
+**Matches:** {len(matches)} shown / {total_matches} total{" (truncated)" if total_matches > max_matches else ""}
 
 """
         for i, match in enumerate(matches, 1):
             md += f"### Match {i} - Line {match['line_number']}\n"
-            if match.get('timestamp') or match.get('level'):
+            if match.get("timestamp") or match.get("level"):
                 md += f"*{match.get('level', '')} | {match.get('timestamp', '')}*\n\n"
 
             md += "```\n"
@@ -395,14 +385,7 @@ def log_analyzer_search(
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_extract_errors(
     file_path: str,
     include_warnings: bool = False,
@@ -511,14 +494,7 @@ def log_analyzer_extract_errors(
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_summarize(
     file_path: str,
     focus: str = "all",
@@ -550,7 +526,7 @@ def log_analyzer_summarize(
             file_path=file_path,
             include_performance=(focus == "all" or focus == "performance"),
             include_security=(focus == "all" or focus == "security"),
-            detected_format=parser.format if hasattr(parser, 'format') else LogFormat.AUTO,
+            detected_format=parser.format if hasattr(parser, "format") else LogFormat.AUTO,
         )
         summary = summarizer.summarize_file(parser, max_lines=max_lines)
 
@@ -599,7 +575,7 @@ def log_analyzer_summarize(
 
 **File:** `{file_path}`
 **Format:** {parser.name} (confidence: {confidence:.0%})
-**Size:** {file_info['size_human']}
+**Size:** {file_info["size_human"]}
 
 ### Overview
 - **Total Lines:** {total_raw_lines:,}
@@ -629,7 +605,9 @@ def log_analyzer_summarize(
         if summary.anomalies:
             md += "\n### Anomalies Detected\n"
             for anomaly in summary.anomalies:
-                severity_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(anomaly.severity, "⚪")
+                severity_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(
+                    anomaly.severity, "⚪"
+                )
                 md += f"- {severity_emoji} **{anomaly.type}:** {anomaly.description}\n"
 
         if summary.recommendations:
@@ -648,14 +626,7 @@ def log_analyzer_summarize(
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_tail(
     file_path: str,
     lines: int = 100,
@@ -697,12 +668,14 @@ def log_analyzer_tail(
                     if entry_level and entry_level.upper() != level_filter_upper:
                         continue
 
-                entries.append({
-                    "line_number": line_num,
-                    "timestamp": entry.timestamp.isoformat() if entry.timestamp else None,
-                    "level": entry.level.value if entry.level else None,
-                    "message": entry.message,
-                })
+                entries.append(
+                    {
+                        "line_number": line_num,
+                        "timestamp": entry.timestamp.isoformat() if entry.timestamp else None,
+                        "level": entry.level.value if entry.level else None,
+                        "message": entry.message,
+                    }
+                )
 
         result = {
             "file": file_path,
@@ -725,10 +698,10 @@ def log_analyzer_tail(
             md += f"**Filter:** {level_filter}\n"
 
         md += "\n```\n"
-        for entry in entries:
-            ts = entry['timestamp'][:19] if entry['timestamp'] else "N/A"
-            level = entry['level'] or "---"
-            msg = entry['message'][:120]
+        for entry_data in entries:
+            ts = entry_data["timestamp"][:19] if entry_data["timestamp"] else "N/A"
+            level = entry_data["level"] or "---"
+            msg = entry_data["message"][:120]
             md += f"[{ts}] {level:8} {msg}\n"
         md += "```\n"
 
@@ -743,14 +716,7 @@ def log_analyzer_tail(
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_correlate(
     file_path: str,
     anchor_pattern: str,
@@ -807,7 +773,9 @@ def log_analyzer_correlate(
             "common_precursors": result.common_precursors[:5],
             "windows": [
                 {
-                    "anchor_time": w.anchor_entry.timestamp.isoformat() if w.anchor_entry and w.anchor_entry.timestamp else None,
+                    "anchor_time": w.anchor_entry.timestamp.isoformat()
+                    if w.anchor_entry and w.anchor_entry.timestamp
+                    else None,
                     "anchor_line": w.anchor_entry.line_number if w.anchor_entry else None,
                     "anchor_message": w.anchor_entry.message[:200] if w.anchor_entry else None,
                     "events_before": len(w.events_before),
@@ -865,14 +833,7 @@ def log_analyzer_correlate(
 # =============================================================================
 
 
-@mcp.tool(
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    }
-)
+@mcp.tool()
 def log_analyzer_diff(
     file_path_a: str,
     file_path_b: str | None = None,
@@ -911,7 +872,7 @@ def log_analyzer_diff(
             if not ts:
                 return None
             try:
-                return datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                return datetime.fromisoformat(ts.replace("Z", "+00:00"))
             except ValueError:
                 return None
 
@@ -986,7 +947,9 @@ def log_analyzer_diff(
                 "changed_errors": len(changed_errors),
             },
             "new_errors": [{"pattern": k, "count": v} for k, v in list(new_errors.items())[:20]],
-            "resolved_errors": [{"pattern": k, "count": v} for k, v in list(resolved_errors.items())[:20]],
+            "resolved_errors": [
+                {"pattern": k, "count": v} for k, v in list(resolved_errors.items())[:20]
+            ],
             "changed_errors": [
                 {"pattern": k, "before": v["before"], "after": v["after"]}
                 for k, v in list(changed_errors.items())[:20]

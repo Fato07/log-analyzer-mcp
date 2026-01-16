@@ -359,10 +359,6 @@ class DiffResult(BaseModel):
     time_range1: str | None = Field(None, description="First time range description")
     time_range2: str | None = Field(None, description="Second time range description")
     new_errors: list[ErrorGroup] = Field(..., description="New errors in second range/file")
-    resolved_errors: list[ErrorGroup] = Field(
-        ..., description="Errors in first but not second"
-    )
-    level_changes: dict[str, dict[str, int]] = Field(
-        ..., description="Changes in log level counts"
-    )
+    resolved_errors: list[ErrorGroup] = Field(..., description="Errors in first but not second")
+    level_changes: dict[str, dict[str, int]] = Field(..., description="Changes in log level counts")
     summary: str = Field(..., description="Human-readable diff summary")

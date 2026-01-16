@@ -72,10 +72,7 @@ class JavaLogParser(MultiLineParser):
                 return True
 
         # Check for stack trace start
-        if self.EXCEPTION_LINE.match(line):
-            return True
-
-        return False
+        return bool(self.EXCEPTION_LINE.match(line))
 
     def is_continuation(self, line: str) -> bool:
         """Check if line is a stack trace continuation."""
@@ -95,10 +92,7 @@ class JavaLogParser(MultiLineParser):
             return True
 
         # Tab-indented continuation
-        if line.startswith("\t") or line.startswith("        "):
-            return True
-
-        return False
+        return line.startswith("\t") or line.startswith("        ")
 
     def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
         """Parse a Java log line."""

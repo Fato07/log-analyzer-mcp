@@ -3,9 +3,20 @@
 import gzip
 import os
 from collections import deque
-from typing import Iterator
+from collections.abc import Iterator
+from pathlib import Path
 
 import chardet
+
+# Type alias for file path arguments
+PathLike = str | Path
+
+
+def _ensure_str_path(file_path: PathLike) -> str:
+    """Convert Path to string if needed."""
+    if isinstance(file_path, Path):
+        return str(file_path)
+    return file_path
 
 
 # ============================================================================
@@ -13,7 +24,7 @@ import chardet
 # ============================================================================
 
 
-def detect_encoding(file_path: str, sample_size: int = 65536) -> str:
+def detect_encoding(file_path: PathLike, sample_size: int = 65536) -> str:
     """
     Detect file encoding using chardet.
 
@@ -27,6 +38,7 @@ def detect_encoding(file_path: str, sample_size: int = 65536) -> str:
     Returns:
         Detected encoding name (e.g., 'utf-8', 'latin-1')
     """
+    file_path = _ensure_str_path(file_path)
     try:
         with open(file_path, "rb") as f:
             raw_data = f.read(sample_size)
@@ -50,7 +62,7 @@ def detect_encoding(file_path: str, sample_size: int = 65536) -> str:
     return "utf-8"
 
 
-def is_gzip_file(file_path: str) -> bool:
+def is_gzip_file(file_path: PathLike) -> bool:
     """
     Check if file is gzip compressed.
 
@@ -62,6 +74,7 @@ def is_gzip_file(file_path: str) -> bool:
     Returns:
         True if file is gzip compressed
     """
+    file_path = _ensure_str_path(file_path)
     # Check extension first
     if file_path.endswith(".gz"):
         return True
@@ -81,7 +94,7 @@ def is_gzip_file(file_path: str) -> bool:
 
 
 def stream_file(
-    file_path: str,
+    file_path: PathLike,
     encoding: str | None = None,
     max_lines: int | None = None,
     skip_empty: bool = False,
@@ -100,6 +113,7 @@ def stream_file(
     Yields:
         Tuples of (line_number, line_content) with line_number 1-indexed
     """
+    file_path = _ensure_str_path(file_path)
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Log file not found: {file_path}")
 
@@ -115,9 +129,9 @@ def stream_file(
 
     try:
         if is_gzip:
-            opener = gzip.open(file_path, "rt", encoding=encoding, errors="replace")
+            opener = gzip.open(file_path, "rt", encoding=encoding, errors="replace")  # noqa: SIM115
         else:
-            opener = open(file_path, encoding=encoding, errors="replace")
+            opener = open(file_path, encoding=encoding, errors="replace")  # noqa: SIM115
 
         with opener as f:
             for line in f:
@@ -136,11 +150,13 @@ def stream_file(
     except UnicodeDecodeError:
         # Retry with latin-1 as fallback
         if encoding != "latin-1":
-            yield from stream_file(file_path, encoding="latin-1", max_lines=max_lines, skip_empty=skip_empty)
+            yield from stream_file(
+                file_path, encoding="latin-1", max_lines=max_lines, skip_empty=skip_empty
+            )
 
 
 def stream_file_chunk(
-    file_path: str,
+    file_path: PathLike,
     start_line: int = 1,
     end_line: int | None = None,
     encoding: str | None = None,
@@ -171,7 +187,7 @@ def stream_file_chunk(
 
 
 def read_tail(
-    file_path: str,
+    file_path: PathLike,
     n_lines: int = 50,
     encoding: str | None = None,
 ) -> list[tuple[int, str]]:
@@ -188,6 +204,7 @@ def read_tail(
     Returns:
         List of (line_number, line_content) tuples for last N lines
     """
+    file_path = _ensure_str_path(file_path)
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Log file not found: {file_path}")
 
@@ -276,7 +293,9 @@ def _read_tail_seek(
             line_str = line_bytes.decode(encoding, errors="replace").rstrip("\r")
             result.append((start_line_num + i, line_str))
         except Exception:
-            result.append((start_line_num + i, line_bytes.decode("latin-1", errors="replace").rstrip("\r")))
+            result.append(
+                (start_line_num + i, line_bytes.decode("latin-1", errors="replace").rstrip("\r"))
+            )
 
     return result
 
@@ -286,7 +305,7 @@ def _read_tail_seek(
 # ============================================================================
 
 
-def get_file_info(file_path: str) -> dict[str, str | int | float | bool]:
+def get_file_info(file_path: PathLike) -> dict[str, str | int | float | bool]:
     """
     Get information about a log file.
 
@@ -296,6 +315,7 @@ def get_file_info(file_path: str) -> dict[str, str | int | float | bool]:
     Returns:
         Dictionary with file information
     """
+    file_path = _ensure_str_path(file_path)
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Log file not found: {file_path}")
 
@@ -313,7 +333,7 @@ def get_file_info(file_path: str) -> dict[str, str | int | float | bool]:
     }
 
 
-def count_lines(file_path: str, encoding: str | None = None) -> int:
+def count_lines(file_path: PathLike, encoding: str | None = None) -> int:
     """
     Count total lines in file efficiently.
 
@@ -345,7 +365,7 @@ def _format_size(size_bytes: int) -> str:
 
 
 def get_lines_with_context(
-    file_path: str,
+    file_path: PathLike,
     target_lines: list[int],
     context_before: int = 3,
     context_after: int = 3,
@@ -364,8 +384,6 @@ def get_lines_with_context(
     Returns:
         Dictionary mapping line numbers to context dicts
     """
-    target_set = set(target_lines)
-
     # Calculate which lines we need to cache
     min_target = min(target_lines) if target_lines else 1
     max_target = max(target_lines) if target_lines else 1
@@ -387,15 +405,9 @@ def get_lines_with_context(
         if target not in line_cache:
             continue
 
-        before = [
-            line_cache[i]
-            for i in range(target - context_before, target)
-            if i in line_cache
-        ]
+        before = [line_cache[i] for i in range(target - context_before, target) if i in line_cache]
         after = [
-            line_cache[i]
-            for i in range(target + 1, target + context_after + 1)
-            if i in line_cache
+            line_cache[i] for i in range(target + 1, target + context_after + 1) if i in line_cache
         ]
 
         result[target] = {

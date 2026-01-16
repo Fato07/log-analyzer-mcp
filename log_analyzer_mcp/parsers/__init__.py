@@ -1,22 +1,19 @@
 """Parser registry and auto-detection for log formats."""
 
-from typing import Type
-
-from log_analyzer_mcp.models import LogFormat
-from log_analyzer_mcp.parsers.base import BaseLogParser
-from log_analyzer_mcp.parsers.syslog import SyslogParser
+from log_analyzer_mcp.models import LogFormat, ParsedLogEntry
 from log_analyzer_mcp.parsers.apache import ApacheAccessParser, ApacheErrorParser
-from log_analyzer_mcp.parsers.jsonl import JSONLParser
-from log_analyzer_mcp.parsers.python_log import PythonLogParser
-from log_analyzer_mcp.parsers.java import JavaLogParser
+from log_analyzer_mcp.parsers.base import BaseLogParser
 from log_analyzer_mcp.parsers.docker import DockerParser
-from log_analyzer_mcp.parsers.kubernetes import KubernetesParser
 from log_analyzer_mcp.parsers.generic import GenericParser
+from log_analyzer_mcp.parsers.java import JavaLogParser
+from log_analyzer_mcp.parsers.jsonl import JSONLParser
+from log_analyzer_mcp.parsers.kubernetes import KubernetesParser
+from log_analyzer_mcp.parsers.python_log import PythonLogParser
+from log_analyzer_mcp.parsers.syslog import SyslogParser
 from log_analyzer_mcp.utils.file_handler import stream_file
 
-
 # Parser registry mapping format names to parser classes
-PARSER_REGISTRY: dict[str, Type[BaseLogParser]] = {
+PARSER_REGISTRY: dict[str, type[BaseLogParser]] = {
     "syslog": SyslogParser,
     "apache_access": ApacheAccessParser,
     "apache_error": ApacheErrorParser,
@@ -43,15 +40,15 @@ FORMAT_TO_PARSER: dict[LogFormat, str] = {
 
 # Detection order - more specific parsers first
 DETECTION_ORDER: list[str] = [
-    "docker",        # Very specific format
-    "kubernetes",    # Specific structured format
-    "apache_access", # Specific combined log format
+    "docker",  # Very specific format
+    "kubernetes",  # Specific structured format
+    "apache_access",  # Specific combined log format
     "apache_error",  # Specific error format
-    "jsonl",         # JSON format
-    "java",          # Java logging format
-    "python",        # Python logging format
-    "syslog",        # Common syslog format
-    "generic",       # Fallback (always last)
+    "jsonl",  # JSON format
+    "java",  # Java logging format
+    "python",  # Python logging format
+    "syslog",  # Common syslog format
+    "generic",  # Fallback (always last)
 ]
 
 
@@ -79,8 +76,7 @@ def get_parser(format_name: str | LogFormat) -> BaseLogParser:
 
     if format_name not in PARSER_REGISTRY:
         raise ValueError(
-            f"Unknown format: {format_name}. "
-            f"Available formats: {', '.join(PARSER_REGISTRY.keys())}"
+            f"Unknown format: {format_name}. Available formats: {', '.join(PARSER_REGISTRY.keys())}"
         )
 
     return PARSER_REGISTRY[format_name]()
@@ -163,10 +159,12 @@ def list_formats() -> list[dict[str, str]]:
     """
     formats = []
     for name, parser_class in PARSER_REGISTRY.items():
-        formats.append({
-            "name": name,
-            "description": parser_class.description,
-        })
+        formats.append(
+            {
+                "name": name,
+                "description": parser_class.description,
+            }
+        )
     return formats
 
 
@@ -194,6 +192,8 @@ def get_parser_for_format(log_format: LogFormat) -> BaseLogParser:
 
 
 __all__ = [
+    # Models
+    "ParsedLogEntry",
     # Parser classes
     "BaseLogParser",
     "SyslogParser",

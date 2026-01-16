@@ -25,20 +25,30 @@ class ApacheAccessParser(BaseLogParser):
 
     # Combined log format pattern
     COMBINED_PATTERN = re.compile(
-        r'^(?P<client_ip>\S+)\s+'
-        r'(?P<ident>\S+)\s+'
-        r'(?P<user>\S+)\s+'
-        r'\[(?P<timestamp>[^\]]+)\]\s+'
+        r"^(?P<client_ip>\S+)\s+"
+        r"(?P<ident>\S+)\s+"
+        r"(?P<user>\S+)\s+"
+        r"\[(?P<timestamp>[^\]]+)\]\s+"
         r'"(?P<request>[^"]*)"\s+'
-        r'(?P<status>\d{3})\s+'
-        r'(?P<bytes>\S+)'
+        r"(?P<status>\d{3})\s+"
+        r"(?P<bytes>\S+)"
         r'(?:\s+"(?P<referer>[^"]*)"\s+"(?P<user_agent>[^"]*)")?'
     )
 
     # Month mapping for Apache date format
     MONTHS = {
-        "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-        "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+        "Jan": 1,
+        "Feb": 2,
+        "Mar": 3,
+        "Apr": 4,
+        "May": 5,
+        "Jun": 6,
+        "Jul": 7,
+        "Aug": 8,
+        "Sep": 9,
+        "Oct": 10,
+        "Nov": 11,
+        "Dec": 12,
     }
 
     def can_parse(self, line: str) -> bool:
@@ -53,7 +63,10 @@ class ApacheAccessParser(BaseLogParser):
             return False
 
         # Check for common HTTP methods
-        return any(method in line for method in ['"GET ', '"POST ', '"PUT ', '"DELETE ', '"HEAD ', '"OPTIONS ', '"PATCH '])
+        return any(
+            method in line
+            for method in ['"GET ', '"POST ', '"PUT ', '"DELETE ', '"HEAD ', '"OPTIONS ', '"PATCH ']
+        )
 
     def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
         """Parse an Apache/Nginx access log line."""
@@ -134,8 +147,12 @@ class ApacheAccessParser(BaseLogParser):
             tz = timezone(timedelta(hours=tz_hours, minutes=tz_minutes))
 
             return datetime(
-                int(year), month, int(day),
-                int(hour), int(minute), int(second),
+                int(year),
+                month,
+                int(day),
+                int(hour),
+                int(minute),
+                int(second),
                 tzinfo=tz,
             )
         except (ValueError, TypeError):
@@ -295,8 +312,18 @@ class ApacheErrorParser(BaseLogParser):
         try:
             groups = match.groupdict()
             month_map = {
-                "Jan": 1, "Feb": 2, "Mar": 3, "Apr": 4, "May": 5, "Jun": 6,
-                "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12,
+                "Jan": 1,
+                "Feb": 2,
+                "Mar": 3,
+                "Apr": 4,
+                "May": 5,
+                "Jun": 6,
+                "Jul": 7,
+                "Aug": 8,
+                "Sep": 9,
+                "Oct": 10,
+                "Nov": 11,
+                "Dec": 12,
             }
 
             month = month_map.get(groups["month"])

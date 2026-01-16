@@ -68,20 +68,17 @@ class KubernetesParser(BaseLogParser):
         if line.startswith("{"):
             # K8s JSON typically uses "ts" for timestamp (not "timestamp")
             # or has kubernetes-specific fields like "pod", "namespace", "container"
-            if '"ts"' in line or '"pod"' in line or '"namespace"' in line or '"container"' in line:
-                return True
             # Don't match generic JSON with just "level" - let JSONLParser handle those
-            return False
+            return (
+                '"ts"' in line or '"pod"' in line or '"namespace"' in line or '"container"' in line
+            )
 
         # Structured format with level=
         if re.match(r"^\d{4}-\d{2}-\d{2}T", line) and "level=" in line:
             return True
 
         # Klog format
-        if re.match(r"^[IWEF]\d{4}\s+\d{2}:\d{2}:\d{2}", line):
-            return True
-
-        return False
+        return bool(re.match(r"^[IWEF]\d{4}\s+\d{2}:\d{2}:\d{2}", line))
 
     def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
         """Parse a Kubernetes log line."""
@@ -141,8 +138,18 @@ class KubernetesParser(BaseLogParser):
             message = json.dumps(data)
 
         # Build metadata from remaining fields
-        excluded = {"ts", "time", "timestamp", "@timestamp", "level",
-                    "severity", "lvl", "msg", "message", "log"}
+        excluded = {
+            "ts",
+            "time",
+            "timestamp",
+            "@timestamp",
+            "level",
+            "severity",
+            "lvl",
+            "msg",
+            "message",
+            "log",
+        }
         metadata = {k: v for k, v in data.items() if k not in excluded}
         metadata["format"] = "json"
 

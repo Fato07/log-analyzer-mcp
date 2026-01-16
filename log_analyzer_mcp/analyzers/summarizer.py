@@ -1,15 +1,16 @@
 """Summarizer analyzer - Generate debugging summary of log files."""
 
 import os
-from collections import Counter, defaultdict
+from collections import Counter
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Iterator, Optional
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 from ..models import Anomaly, FileInfo, LogFormat, TimeRange
 from ..parsers.base import BaseLogParser, ParsedLogEntry
 from .error_extractor import ErrorExtractor, ErrorGroup
-
 
 # Output limits
 MAX_TOP_ERRORS = 10
@@ -19,13 +20,14 @@ MAX_ANOMALIES = 20
 @dataclass
 class PerformanceMetrics:
     """Performance-related metrics from logs."""
+
     slow_requests_1s: int = 0  # Requests >1s
     slow_requests_5s: int = 0  # Requests >5s
     slow_requests_10s: int = 0  # Requests >10s
-    avg_response_time_ms: Optional[float] = None
-    max_response_time_ms: Optional[float] = None
+    avg_response_time_ms: float | None = None
+    max_response_time_ms: float | None = None
     total_requests: int = 0
-    throughput_per_minute: Optional[float] = None
+    throughput_per_minute: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -43,6 +45,7 @@ class PerformanceMetrics:
 @dataclass
 class SecurityIndicators:
     """Security-related indicators from logs."""
+
     failed_auth_attempts: int = 0
     suspicious_ips: list[str] = field(default_factory=list)
     error_4xx_count: int = 0
@@ -65,14 +68,15 @@ class SecurityIndicators:
 @dataclass
 class LogSummary:
     """Complete log summary."""
+
     file_info: FileInfo
     time_range: TimeRange
     level_distribution: dict[str, int] = field(default_factory=dict)
     top_errors: list[ErrorGroup] = field(default_factory=list)
     anomalies: list[Anomaly] = field(default_factory=list)
     recommendations: list[str] = field(default_factory=list)
-    performance: Optional[PerformanceMetrics] = None
-    security: Optional[SecurityIndicators] = None
+    performance: PerformanceMetrics | None = None
+    security: SecurityIndicators | None = None
     total_entries: int = 0
 
     def to_dict(self) -> dict[str, Any]:
@@ -124,22 +128,22 @@ class Summarizer:
 
     # Auth failure patterns
     AUTH_FAILURE_PATTERNS = [
-        'authentication failed',
-        'login failed',
-        'invalid password',
-        'access denied',
-        'unauthorized',
-        'permission denied',
-        '401',
-        '403',
+        "authentication failed",
+        "login failed",
+        "invalid password",
+        "access denied",
+        "unauthorized",
+        "permission denied",
+        "401",
+        "403",
     ]
 
     def __init__(
         self,
-        file_path: str,
+        file_path: str | Path,
         include_performance: bool = True,
         include_security: bool = True,
-        detected_format: LogFormat = LogFormat.AUTO
+        detected_format: LogFormat = LogFormat.AUTO,
     ):
         """
         Initialize summarizer.
@@ -150,7 +154,8 @@ class Summarizer:
             include_security: Include security indicators
             detected_format: Detected log format
         """
-        self.file_path = file_path
+        # Ensure file_path is always a string
+        self.file_path = str(file_path) if isinstance(file_path, Path) else file_path
         self.include_performance = include_performance
         self.include_security = include_security
         self.detected_format = detected_format
@@ -158,14 +163,12 @@ class Summarizer:
         # State
         self._total_entries = 0
         self._level_counts: Counter[str] = Counter()
-        self._time_start: Optional[datetime] = None
-        self._time_end: Optional[datetime] = None
+        self._time_start: datetime | None = None
+        self._time_end: datetime | None = None
 
         # Error tracking (delegate to ErrorExtractor)
         self._error_extractor = ErrorExtractor(
-            include_warnings=True,
-            max_errors=MAX_TOP_ERRORS,
-            group_similar=True
+            include_warnings=True, max_errors=MAX_TOP_ERRORS, group_similar=True
         )
 
         # Performance tracking
@@ -180,9 +183,9 @@ class Summarizer:
 
         # Anomaly detection
         self._entries_per_minute: Counter[str] = Counter()  # minute bucket -> count
-        self._last_timestamp: Optional[datetime] = None
+        self._last_timestamp: datetime | None = None
 
-    def _update_time_range(self, timestamp: Optional[datetime]) -> None:
+    def _update_time_range(self, timestamp: datetime | None) -> None:
         """Update tracked time range."""
         if timestamp:
             if self._time_start is None or timestamp < self._time_start:
@@ -197,7 +200,7 @@ class Summarizer:
 
     def _get_minute_bucket(self, timestamp: datetime) -> str:
         """Get minute bucket key for timestamp."""
-        return timestamp.strftime('%Y-%m-%d %H:%M')
+        return timestamp.strftime("%Y-%m-%d %H:%M")
 
     def process_entry(self, entry: ParsedLogEntry) -> None:
         """
@@ -210,7 +213,7 @@ class Summarizer:
         self._update_time_range(entry.timestamp)
 
         # Track level distribution
-        level = (entry.level or 'UNKNOWN').upper()
+        level = (entry.level or "UNKNOWN").upper()
         self._level_counts[level] += 1
 
         # Delegate error tracking
@@ -228,7 +231,7 @@ class Summarizer:
         # Performance metrics (for web access logs)
         if self.include_performance:
             # Check for response time in metadata
-            response_time = metadata.get('response_time') or metadata.get('duration')
+            response_time = metadata.get("response_time") or metadata.get("duration")
             if response_time is not None:
                 try:
                     rt_ms = float(response_time)
@@ -245,12 +248,12 @@ class Summarizer:
                 self._auth_failures += 1
 
             # Track IP addresses
-            client_ip = metadata.get('client_ip') or metadata.get('ip')
+            client_ip = metadata.get("client_ip") or metadata.get("ip")
             if client_ip:
                 self._ip_counter[str(client_ip)] += 1
 
             # Track status codes (for web logs)
-            status = metadata.get('status_code') or metadata.get('status')
+            status = metadata.get("status_code") or metadata.get("status")
             if status is not None:
                 try:
                     status_int = int(status)
@@ -258,7 +261,7 @@ class Summarizer:
 
                     # Track paths with errors
                     if status_int >= 400:
-                        path = metadata.get('path') or metadata.get('url') or 'unknown'
+                        path = metadata.get("path") or metadata.get("url") or "unknown"
                         self._path_errors[str(path)] += 1
                 except (ValueError, TypeError):
                     pass
@@ -282,13 +285,15 @@ class Summarizer:
         spike_threshold = avg_count * 3
         for bucket, count in self._entries_per_minute.items():
             if count > spike_threshold and count == max_count:
-                anomalies.append(Anomaly(
-                    type="spike",
-                    description=f"Log volume spike: {count} entries in minute {bucket} (avg: {avg_count:.0f})",
-                    severity="high" if count > avg_count * 5 else "medium",
-                    timestamp=datetime.strptime(bucket, '%Y-%m-%d %H:%M') if bucket else None,
-                    details={"count": count, "average": avg_count}
-                ))
+                anomalies.append(
+                    Anomaly(
+                        type="spike",
+                        description=f"Log volume spike: {count} entries in minute {bucket} (avg: {avg_count:.0f})",
+                        severity="high" if count > avg_count * 5 else "medium",
+                        timestamp=datetime.strptime(bucket, "%Y-%m-%d %H:%M") if bucket else None,
+                        details={"count": count, "average": avg_count},
+                    )
+                )
                 if len(anomalies) >= MAX_ANOMALIES:
                     break
 
@@ -297,18 +302,20 @@ class Summarizer:
             sorted_buckets = sorted(self._entries_per_minute.keys())
             for i in range(1, len(sorted_buckets)):
                 try:
-                    prev_time = datetime.strptime(sorted_buckets[i-1], '%Y-%m-%d %H:%M')
-                    curr_time = datetime.strptime(sorted_buckets[i], '%Y-%m-%d %H:%M')
+                    prev_time = datetime.strptime(sorted_buckets[i - 1], "%Y-%m-%d %H:%M")
+                    curr_time = datetime.strptime(sorted_buckets[i], "%Y-%m-%d %H:%M")
                     gap = (curr_time - prev_time).total_seconds() / 60
 
                     if gap > 5:
-                        anomalies.append(Anomaly(
-                            type="gap",
-                            description=f"Logging gap of {gap:.0f} minutes between {sorted_buckets[i-1]} and {sorted_buckets[i]}",
-                            severity="medium" if gap < 15 else "high",
-                            timestamp=prev_time,
-                            details={"gap_minutes": gap}
-                        ))
+                        anomalies.append(
+                            Anomaly(
+                                type="gap",
+                                description=f"Logging gap of {gap:.0f} minutes between {sorted_buckets[i - 1]} and {sorted_buckets[i]}",
+                                severity="medium" if gap < 15 else "high",
+                                timestamp=prev_time,
+                                details={"gap_minutes": gap},
+                            )
+                        )
                         if len(anomalies) >= MAX_ANOMALIES:
                             break
                 except ValueError:
@@ -317,18 +324,20 @@ class Summarizer:
         # Detect unusual level distribution
         total_entries = sum(self._level_counts.values())
         if total_entries > 100:
-            error_levels = {'ERROR', 'FATAL', 'CRITICAL', 'EMERGENCY'}
-            error_count = sum(self._level_counts[l] for l in error_levels)
+            error_levels = {"ERROR", "FATAL", "CRITICAL", "EMERGENCY"}
+            error_count = sum(self._level_counts[lvl] for lvl in error_levels)
             error_rate = error_count / total_entries
 
             if error_rate > 0.1:  # >10% errors
-                anomalies.append(Anomaly(
-                    type="unusual_level",
-                    description=f"High error rate: {error_rate*100:.1f}% of entries are errors",
-                    severity="high" if error_rate > 0.25 else "medium",
-                    timestamp=self._time_end,
-                    details={"error_rate": error_rate, "error_count": error_count}
-                ))
+                anomalies.append(
+                    Anomaly(
+                        type="unusual_level",
+                        description=f"High error rate: {error_rate * 100:.1f}% of entries are errors",
+                        severity="high" if error_rate > 0.25 else "medium",
+                        timestamp=self._time_end,
+                        details={"error_rate": error_rate, "error_count": error_count},
+                    )
+                )
 
         return anomalies[:MAX_ANOMALIES]
 
@@ -346,9 +355,11 @@ class Summarizer:
         # Based on anomalies
         for anomaly in anomalies[:3]:
             if anomaly.type == "spike":
-                recommendations.append(f"Review log spike at {anomaly.timestamp} for potential incident")
+                recommendations.append(
+                    f"Review log spike at {anomaly.timestamp} for potential incident"
+                )
             elif anomaly.type == "gap":
-                recommendations.append(f"Check system health during logging gap - possible outage")
+                recommendations.append("Check system health during logging gap - possible outage")
             elif anomaly.type == "unusual_level":
                 recommendations.append("High error rate detected - prioritize error investigation")
 
@@ -369,7 +380,7 @@ class Summarizer:
 
         return recommendations[:5]  # Limit to 5 recommendations
 
-    def _build_performance_metrics(self) -> Optional[PerformanceMetrics]:
+    def _build_performance_metrics(self) -> PerformanceMetrics | None:
         """Build performance metrics from collected data."""
         if not self._response_times:
             return None
@@ -398,7 +409,7 @@ class Summarizer:
 
         return metrics
 
-    def _build_security_indicators(self) -> Optional[SecurityIndicators]:
+    def _build_security_indicators(self) -> SecurityIndicators | None:
         """Build security indicators from collected data."""
         indicators = SecurityIndicators()
         indicators.failed_auth_attempts = self._auth_failures
@@ -449,14 +460,11 @@ class Summarizer:
             size_bytes=file_size,
             total_lines=self._total_entries,
             detected_format=self.detected_format,
-            encoding="utf-8"
+            encoding="utf-8",
         )
 
         # Build time range
-        time_range = TimeRange(
-            start=self._time_start,
-            end=self._time_end
-        )
+        time_range = TimeRange(start=self._time_start, end=self._time_end)
 
         return LogSummary(
             file_info=file_info,
@@ -467,14 +475,10 @@ class Summarizer:
             recommendations=recommendations,
             performance=self._build_performance_metrics() if self.include_performance else None,
             security=self._build_security_indicators() if self.include_security else None,
-            total_entries=self._total_entries
+            total_entries=self._total_entries,
         )
 
-    def summarize_file(
-        self,
-        parser: BaseLogParser,
-        max_lines: int = 10000
-    ) -> LogSummary:
+    def summarize_file(self, parser: BaseLogParser, max_lines: int = 10000) -> LogSummary:
         """
         Generate summary for a log file.
 
@@ -489,10 +493,7 @@ class Summarizer:
             self.process_entry(entry)
         return self.finalize()
 
-    def summarize_entries(
-        self,
-        entries: Iterator[ParsedLogEntry]
-    ) -> LogSummary:
+    def summarize_entries(self, entries: Iterator[ParsedLogEntry]) -> LogSummary:
         """
         Generate summary from an iterator of entries.
 
@@ -513,7 +514,7 @@ def summarize_log(
     include_performance: bool = True,
     include_security: bool = True,
     detected_format: LogFormat = LogFormat.AUTO,
-    max_lines: int = 10000
+    max_lines: int = 10000,
 ) -> LogSummary:
     """
     Convenience function to summarize a log file.
@@ -533,6 +534,6 @@ def summarize_log(
         file_path=file_path,
         include_performance=include_performance,
         include_security=include_security,
-        detected_format=detected_format
+        detected_format=detected_format,
     )
     return summarizer.summarize_file(parser, max_lines=max_lines)

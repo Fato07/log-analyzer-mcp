@@ -1,13 +1,13 @@
 """Correlator analyzer - Correlate events around anchor points."""
 
 import re
-from collections import Counter, defaultdict
+from collections import Counter
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from ..parsers.base import BaseLogParser, ParsedLogEntry
-
 
 # Output limits
 MAX_ANCHORS = 10
@@ -18,6 +18,7 @@ MAX_PRECURSORS = 10
 @dataclass
 class CorrelationWindow:
     """A time window around an anchor event."""
+
     anchor_entry: ParsedLogEntry
     events_before: list[ParsedLogEntry] = field(default_factory=list)
     events_after: list[ParsedLogEntry] = field(default_factory=list)
@@ -29,7 +30,9 @@ class CorrelationWindow:
         return {
             "anchor": {
                 "line_number": self.anchor_entry.line_number,
-                "timestamp": self.anchor_entry.timestamp.isoformat() if self.anchor_entry.timestamp else None,
+                "timestamp": self.anchor_entry.timestamp.isoformat()
+                if self.anchor_entry.timestamp
+                else None,
                 "level": self.anchor_entry.level,
                 "message": self.anchor_entry.message[:500],
             },
@@ -65,13 +68,14 @@ class CorrelationWindow:
                 "before": len(self.events_before),
                 "after": len(self.events_after),
                 "errors": len(self.related_errors),
-            }
+            },
         }
 
 
 @dataclass
 class CorrelationResult:
     """Result of event correlation."""
+
     anchor_pattern: str
     total_anchors: int = 0
     windows: list[CorrelationWindow] = field(default_factory=list)
@@ -98,7 +102,7 @@ class Correlator:
     """
 
     # Error levels for related error detection
-    ERROR_LEVELS = {'ERROR', 'FATAL', 'CRITICAL', 'EMERGENCY', 'SEVERE'}
+    ERROR_LEVELS = {"ERROR", "FATAL", "CRITICAL", "EMERGENCY", "SEVERE"}
 
     def __init__(
         self,
@@ -107,7 +111,7 @@ class Correlator:
         window_after: int = 30,
         max_anchors: int = MAX_ANCHORS,
         regex: bool = True,
-        case_sensitive: bool = False
+        case_sensitive: bool = False,
     ):
         """
         Initialize correlator.
@@ -133,7 +137,7 @@ class Correlator:
             try:
                 self._pattern = re.compile(anchor_pattern, flags)
             except re.error as e:
-                raise ValueError(f"Invalid regex pattern: {e}")
+                raise ValueError(f"Invalid regex pattern: {e}") from e
         else:
             escaped = re.escape(anchor_pattern)
             self._pattern = re.compile(escaped, flags)
@@ -153,17 +157,17 @@ class Correlator:
             return False
         return entry.level.upper() in self.ERROR_LEVELS
 
-    def _get_source(self, entry: ParsedLogEntry) -> Optional[str]:
+    def _get_source(self, entry: ParsedLogEntry) -> str | None:
         """Extract source identifier from entry."""
         # Try common metadata fields
         metadata = entry.metadata
-        for key in ['hostname', 'host', 'source', 'process', 'service', 'container', 'pod']:
+        for key in ["hostname", "host", "source", "process", "service", "container", "pod"]:
             if key in metadata:
                 return str(metadata[key])
 
         # Try to extract from message
         # Look for common patterns like "hostname:" or "[service]"
-        match = re.search(r'^(\S+):', entry.message)
+        match = re.search(r"^(\S+):", entry.message)
         if match:
             return match.group(1)
 
@@ -172,12 +176,12 @@ class Correlator:
     def _normalize_message(self, message: str) -> str:
         """Normalize message for precursor grouping."""
         # Replace numbers with <N>
-        result = re.sub(r'\b\d+\b', '<N>', message)
+        result = re.sub(r"\b\d+\b", "<N>", message)
         # Collapse whitespace
-        result = re.sub(r'\s+', ' ', result)
+        result = re.sub(r"\s+", " ", result)
         # Truncate
         if len(result) > 100:
-            result = result[:100] + '...'
+            result = result[:100] + "..."
         return result.strip()
 
     def process_entry(self, entry: ParsedLogEntry) -> None:
@@ -258,7 +262,8 @@ class Correlator:
         # Return precursors that appear in >50% of windows
         threshold = len(windows) * 0.5
         common = [
-            msg for msg, count in precursor_counts.most_common(MAX_PRECURSORS * 2)
+            msg
+            for msg, count in precursor_counts.most_common(MAX_PRECURSORS * 2)
             if count >= threshold
         ]
 
@@ -282,14 +287,11 @@ class Correlator:
             total_anchors=self._total_anchors,
             windows=windows,
             common_precursors=common_precursors,
-            truncated=self._total_anchors > len(windows)
+            truncated=self._total_anchors > len(windows),
         )
 
     def correlate_file(
-        self,
-        parser: BaseLogParser,
-        file_path: str,
-        max_lines: int = 10000
+        self, parser: BaseLogParser, file_path: str, max_lines: int = 10000
     ) -> CorrelationResult:
         """
         Correlate events in a log file.
@@ -306,10 +308,7 @@ class Correlator:
             self.process_entry(entry)
         return self.finalize()
 
-    def correlate_entries(
-        self,
-        entries: Iterator[ParsedLogEntry]
-    ) -> CorrelationResult:
+    def correlate_entries(self, entries: Iterator[ParsedLogEntry]) -> CorrelationResult:
         """
         Correlate events from an iterator of entries.
 
@@ -331,7 +330,7 @@ class StreamingCorrelator:
     Suitable for very large files where the standard Correlator would use too much memory.
     """
 
-    ERROR_LEVELS = {'ERROR', 'FATAL', 'CRITICAL', 'EMERGENCY', 'SEVERE'}
+    ERROR_LEVELS = {"ERROR", "FATAL", "CRITICAL", "EMERGENCY", "SEVERE"}
 
     def __init__(
         self,
@@ -340,7 +339,7 @@ class StreamingCorrelator:
         window_after: int = 30,
         max_anchors: int = MAX_ANCHORS,
         regex: bool = True,
-        case_sensitive: bool = False
+        case_sensitive: bool = False,
     ):
         """
         Initialize streaming correlator.
@@ -364,7 +363,7 @@ class StreamingCorrelator:
             try:
                 self._pattern = re.compile(anchor_pattern, flags)
             except re.error as e:
-                raise ValueError(f"Invalid regex pattern: {e}")
+                raise ValueError(f"Invalid regex pattern: {e}") from e
         else:
             escaped = re.escape(anchor_pattern)
             self._pattern = re.compile(escaped, flags)
@@ -375,7 +374,7 @@ class StreamingCorrelator:
 
         # Sliding window buffer (entries within window_before seconds)
         self._buffer: list[ParsedLogEntry] = []
-        self._buffer_start_time: Optional[datetime] = None
+        self._buffer_start_time: datetime | None = None
 
         # Pending anchors waiting for after-events
         self._pending_anchors: list[tuple[CorrelationWindow, datetime]] = []  # (window, deadline)
@@ -395,7 +394,7 @@ class StreamingCorrelator:
         cutoff = current_time - timedelta(seconds=self.window_before_secs)
         self._buffer = [e for e in self._buffer if e.timestamp and e.timestamp >= cutoff]
 
-    def _finalize_pending(self, current_time: Optional[datetime]) -> None:
+    def _finalize_pending(self, current_time: datetime | None) -> None:
         """Finalize pending anchors whose after-window has expired."""
         if current_time is None:
             # Finalize all pending
@@ -449,7 +448,7 @@ class StreamingCorrelator:
                     anchor_entry=entry,
                     events_before=list(self._buffer),
                     events_after=[],
-                    related_errors=[e for e in self._buffer if self._is_error(e)]
+                    related_errors=[e for e in self._buffer if self._is_error(e)],
                 )
 
                 if current_time:
@@ -478,14 +477,11 @@ class StreamingCorrelator:
             total_anchors=self._total_anchors,
             windows=self._windows,
             common_precursors=[],  # Not tracked in streaming mode
-            truncated=self._total_anchors > len(self._windows)
+            truncated=self._total_anchors > len(self._windows),
         )
 
     def correlate_file(
-        self,
-        parser: BaseLogParser,
-        file_path: str,
-        max_lines: int = 10000
+        self, parser: BaseLogParser, file_path: str, max_lines: int = 10000
     ) -> CorrelationResult:
         """
         Correlate events in a log file using streaming mode.
@@ -502,10 +498,7 @@ class StreamingCorrelator:
             self.process_entry(entry)
         return self.finalize()
 
-    def correlate_entries(
-        self,
-        entries: Iterator[ParsedLogEntry]
-    ) -> CorrelationResult:
+    def correlate_entries(self, entries: Iterator[ParsedLogEntry]) -> CorrelationResult:
         """
         Correlate events from an iterator of entries.
 
@@ -530,7 +523,7 @@ def correlate_events(
     regex: bool = True,
     case_sensitive: bool = False,
     max_lines: int = 10000,
-    streaming: bool = False
+    streaming: bool = False,
 ) -> CorrelationResult:
     """
     Convenience function to correlate events in a log file.
@@ -557,7 +550,7 @@ def correlate_events(
             window_after=window_after,
             max_anchors=max_anchors,
             regex=regex,
-            case_sensitive=case_sensitive
+            case_sensitive=case_sensitive,
         )
     else:
         correlator = Correlator(
@@ -566,7 +559,7 @@ def correlate_events(
             window_after=window_after,
             max_anchors=max_anchors,
             regex=regex,
-            case_sensitive=case_sensitive
+            case_sensitive=case_sensitive,
         )
 
     return correlator.correlate_file(parser, file_path, max_lines=max_lines)

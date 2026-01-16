@@ -1,13 +1,12 @@
 """Error extractor analyzer - Extract and group errors from logs."""
 
 import re
-from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from ..parsers.base import BaseLogParser, ParsedLogEntry
-
 
 # Output limits
 MAX_ERRORS = 50
@@ -18,15 +17,16 @@ MAX_STACK_TRACE_LINES = 30
 @dataclass
 class ErrorGroup:
     """A group of similar errors."""
+
     template: str  # Normalized message
     count: int = 0
-    first_seen: Optional[datetime] = None
-    last_seen: Optional[datetime] = None
+    first_seen: datetime | None = None
+    last_seen: datetime | None = None
     sample_entries: list[ParsedLogEntry] = field(default_factory=list)
-    stack_trace: Optional[str] = None
+    stack_trace: str | None = None
     levels: set[str] = field(default_factory=set)
 
-    def add_entry(self, entry: ParsedLogEntry, stack_trace: Optional[str] = None) -> None:
+    def add_entry(self, entry: ParsedLogEntry, stack_trace: str | None = None) -> None:
         """Add an entry to this error group."""
         self.count += 1
 
@@ -44,20 +44,21 @@ class ErrorGroup:
 
         if stack_trace and not self.stack_trace:
             # Truncate stack trace if too long
-            lines = stack_trace.split('\n')
+            lines = stack_trace.split("\n")
             if len(lines) > MAX_STACK_TRACE_LINES:
-                lines = lines[:MAX_STACK_TRACE_LINES] + ['... (truncated)']
-            self.stack_trace = '\n'.join(lines)
+                lines = lines[:MAX_STACK_TRACE_LINES] + ["... (truncated)"]
+            self.stack_trace = "\n".join(lines)
 
 
 @dataclass
 class ErrorExtractionResult:
     """Result of error extraction."""
+
     total_errors: int = 0
     total_warnings: int = 0
     unique_errors: int = 0
     error_groups: list[ErrorGroup] = field(default_factory=list)
-    time_range: tuple[Optional[datetime], Optional[datetime]] = (None, None)
+    time_range: tuple[datetime | None, datetime | None] = (None, None)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
@@ -108,72 +109,50 @@ def normalize_error_message(message: str) -> str:
 
     # Replace UUIDs (8-4-4-4-12 hex format)
     result = re.sub(
-        r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}',
-        '<UUID>',
-        result
+        r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        "<UUID>",
+        result,
     )
 
     # Replace IP addresses (IPv4)
-    result = re.sub(
-        r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b',
-        '<IP>',
-        result
-    )
+    result = re.sub(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "<IP>", result)
 
     # Replace timestamps (various formats)
     # ISO 8601
     result = re.sub(
-        r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?',
-        '<TIME>',
-        result
+        r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?", "<TIME>", result
     )
     # Other timestamp formats
-    result = re.sub(
-        r'\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}',
-        '<TIME>',
-        result
-    )
-    result = re.sub(
-        r'\d{2}:\d{2}:\d{2}(?:,\d+)?',
-        '<TIME>',
-        result
-    )
+    result = re.sub(r"\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}", "<TIME>", result)
+    result = re.sub(r"\d{2}:\d{2}:\d{2}(?:,\d+)?", "<TIME>", result)
 
     # Replace file paths (Unix and Windows)
-    result = re.sub(
-        r'(?:/[\w\-\.]+)+(?:/[\w\-\.]*)?',
-        '<PATH>',
-        result
-    )
-    result = re.sub(
-        r'[A-Za-z]:\\(?:[\w\-\.]+\\)*[\w\-\.]*',
-        '<PATH>',
-        result
-    )
+    result = re.sub(r"(?:/[\w\-\.]+)+(?:/[\w\-\.]*)?", "<PATH>", result)
+    result = re.sub(r"[A-Za-z]:\\(?:[\w\-\.]+\\)*[\w\-\.]*", "<PATH>", result)
 
     # Replace hex values (0x...)
-    result = re.sub(r'0x[0-9a-fA-F]+', '<HEX>', result)
+    result = re.sub(r"0x[0-9a-fA-F]+", "<HEX>", result)
 
     # Replace memory addresses
-    result = re.sub(r'\bat 0x[0-9a-fA-F]+\b', 'at <ADDR>', result)
+    result = re.sub(r"\bat 0x[0-9a-fA-F]+\b", "at <ADDR>", result)
 
     # Replace numbers (but preserve numbers in common error codes)
     # First, protect error codes like "404", "500", "E1234"
     protected = {}
-    for i, match in enumerate(re.finditer(r'\b[A-Z]?\d{3,4}\b', result)):
-        placeholder = f'__ERROR_CODE_{i}__'
+    for i, match in enumerate(re.finditer(r"\b[A-Z]?\d{3,4}\b", result)):
+        placeholder = f"__ERROR_CODE_{i}__"
         protected[placeholder] = match.group()
         result = result.replace(match.group(), placeholder, 1)
 
     # Now replace remaining numbers
-    result = re.sub(r'\b\d+\b', '<N>', result)
+    result = re.sub(r"\b\d+\b", "<N>", result)
 
     # Restore protected error codes
     for placeholder, original in protected.items():
         result = result.replace(placeholder, original)
 
     # Collapse multiple spaces
-    result = re.sub(r'\s+', ' ', result)
+    result = re.sub(r"\s+", " ", result)
 
     return result.strip()
 
@@ -185,32 +164,32 @@ class ErrorExtractor:
     """
 
     # Error level keywords
-    ERROR_LEVELS = {'ERROR', 'FATAL', 'CRITICAL', 'EMERGENCY', 'SEVERE'}
-    WARNING_LEVELS = {'WARN', 'WARNING'}
+    ERROR_LEVELS = {"ERROR", "FATAL", "CRITICAL", "EMERGENCY", "SEVERE"}
+    WARNING_LEVELS = {"WARN", "WARNING"}
 
     # Stack trace detection patterns
     STACK_TRACE_PATTERNS = [
-        re.compile(r'^Traceback \(most recent call last\):'),  # Python
-        re.compile(r'^\s+at\s+[\w\.$]+\('),  # Java/JavaScript
+        re.compile(r"^Traceback \(most recent call last\):"),  # Python
+        re.compile(r"^\s+at\s+[\w\.$]+\("),  # Java/JavaScript
         re.compile(r'^\s+File\s+"[^"]+",\s+line\s+\d+'),  # Python stack frame
-        re.compile(r'^Caused by:'),  # Java cause chain
-        re.compile(r'^\s+\.{3}\s+\d+\s+more'),  # Java truncated stack
-        re.compile(r'^\s+at\s+'),  # Generic "at" lines
+        re.compile(r"^Caused by:"),  # Java cause chain
+        re.compile(r"^\s+\.{3}\s+\d+\s+more"),  # Java truncated stack
+        re.compile(r"^\s+at\s+"),  # Generic "at" lines
     ]
 
     # Exception type patterns
     EXCEPTION_PATTERNS = [
-        re.compile(r'^(\w+(?:\.\w+)*(?:Error|Exception|Failure))[:\s]'),  # Python/Java
-        re.compile(r'^(\w+Exception):'),  # Java exceptions
-        re.compile(r'^(\w+Error):'),  # General errors
-        re.compile(r'Caused by:\s*(\w+(?:\.\w+)*(?:Error|Exception))'),  # Java caused by
+        re.compile(r"^(\w+(?:\.\w+)*(?:Error|Exception|Failure))[:\s]"),  # Python/Java
+        re.compile(r"^(\w+Exception):"),  # Java exceptions
+        re.compile(r"^(\w+Error):"),  # General errors
+        re.compile(r"Caused by:\s*(\w+(?:\.\w+)*(?:Error|Exception))"),  # Java caused by
     ]
 
     def __init__(
         self,
         include_warnings: bool = True,
         max_errors: int = MAX_ERRORS,
-        group_similar: bool = True
+        group_similar: bool = True,
     ):
         """
         Initialize error extractor.
@@ -228,20 +207,20 @@ class ErrorExtractor:
         self._error_groups: dict[str, ErrorGroup] = {}
         self._total_errors = 0
         self._total_warnings = 0
-        self._time_start: Optional[datetime] = None
-        self._time_end: Optional[datetime] = None
+        self._time_start: datetime | None = None
+        self._time_end: datetime | None = None
 
         # Stack trace accumulation
-        self._pending_error: Optional[ParsedLogEntry] = None
+        self._pending_error: ParsedLogEntry | None = None
         self._stack_trace_lines: list[str] = []
 
-    def _is_error_level(self, level: Optional[str]) -> bool:
+    def _is_error_level(self, level: str | None) -> bool:
         """Check if level indicates an error."""
         if not level:
             return False
         return level.upper() in self.ERROR_LEVELS
 
-    def _is_warning_level(self, level: Optional[str]) -> bool:
+    def _is_warning_level(self, level: str | None) -> bool:
         """Check if level indicates a warning."""
         if not level:
             return False
@@ -249,12 +228,9 @@ class ErrorExtractor:
 
     def _is_stack_trace_line(self, line: str) -> bool:
         """Check if line is part of a stack trace."""
-        for pattern in self.STACK_TRACE_PATTERNS:
-            if pattern.match(line):
-                return True
-        return False
+        return any(pattern.match(line) for pattern in self.STACK_TRACE_PATTERNS)
 
-    def _update_time_range(self, timestamp: Optional[datetime]) -> None:
+    def _update_time_range(self, timestamp: datetime | None) -> None:
         """Update the tracked time range."""
         if timestamp:
             if self._time_start is None or timestamp < self._time_start:
@@ -268,18 +244,14 @@ class ErrorExtractor:
             return
 
         entry = self._pending_error
-        stack_trace = '\n'.join(self._stack_trace_lines) if self._stack_trace_lines else None
+        stack_trace = "\n".join(self._stack_trace_lines) if self._stack_trace_lines else None
 
         # Get template for grouping
-        if self.group_similar:
-            template = normalize_error_message(entry.message)
-        else:
-            template = entry.message
+        template = normalize_error_message(entry.message) if self.group_similar else entry.message
 
         # Add to group
-        if template not in self._error_groups:
-            if len(self._error_groups) < self.max_errors:
-                self._error_groups[template] = ErrorGroup(template=template)
+        if template not in self._error_groups and len(self._error_groups) < self.max_errors:
+            self._error_groups[template] = ErrorGroup(template=template)
 
         if template in self._error_groups:
             self._error_groups[template].add_entry(entry, stack_trace)
@@ -330,25 +302,18 @@ class ErrorExtractor:
         self._flush_pending_error()
 
         # Sort error groups by count (most frequent first)
-        sorted_groups = sorted(
-            self._error_groups.values(),
-            key=lambda g: g.count,
-            reverse=True
-        )
+        sorted_groups = sorted(self._error_groups.values(), key=lambda g: g.count, reverse=True)
 
         return ErrorExtractionResult(
             total_errors=self._total_errors,
             total_warnings=self._total_warnings,
             unique_errors=len(sorted_groups),
             error_groups=sorted_groups,
-            time_range=(self._time_start, self._time_end)
+            time_range=(self._time_start, self._time_end),
         )
 
     def analyze_file(
-        self,
-        parser: BaseLogParser,
-        file_path: str,
-        max_lines: int = 10000
+        self, parser: BaseLogParser, file_path: str, max_lines: int = 10000
     ) -> ErrorExtractionResult:
         """
         Stream analyze a file for errors.
@@ -365,10 +330,7 @@ class ErrorExtractor:
             self.process_entry(entry)
         return self.finalize()
 
-    def analyze_entries(
-        self,
-        entries: Iterator[ParsedLogEntry]
-    ) -> ErrorExtractionResult:
+    def analyze_entries(self, entries: Iterator[ParsedLogEntry]) -> ErrorExtractionResult:
         """
         Analyze an iterator of entries.
 
@@ -389,7 +351,7 @@ def extract_errors(
     include_warnings: bool = True,
     max_errors: int = MAX_ERRORS,
     group_similar: bool = True,
-    max_lines: int = 10000
+    max_lines: int = 10000,
 ) -> ErrorExtractionResult:
     """
     Convenience function to extract errors from a log file.
@@ -406,8 +368,6 @@ def extract_errors(
         ErrorExtractionResult with all extracted errors
     """
     extractor = ErrorExtractor(
-        include_warnings=include_warnings,
-        max_errors=max_errors,
-        group_similar=group_similar
+        include_warnings=include_warnings, max_errors=max_errors, group_similar=group_similar
     )
     return extractor.analyze_file(parser, file_path, max_lines=max_lines)

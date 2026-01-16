@@ -205,3 +205,175 @@ def sample_docker_lines() -> list[str]:
 def sample_kubernetes_lines() -> list[str]:
     """Sample Kubernetes log lines for testing."""
     return SAMPLE_KUBERNETES_LINES.copy()
+
+
+# ============================================================================
+# Fixtures for analyzer tests
+# ============================================================================
+
+@pytest.fixture
+def sample_log_entries() -> list:
+    """
+    Sample ParsedLogEntry objects for analyzer testing.
+
+    Provides a mix of INFO, WARN, ERROR entries with realistic content
+    including database errors that can be grouped.
+    """
+    from datetime import datetime, timedelta
+    from log_analyzer_mcp.models import ParsedLogEntry, LogLevel
+
+    base_time = datetime(2024, 1, 15, 10, 0, 0)
+
+    return [
+        ParsedLogEntry(
+            line_number=1,
+            raw_line="2024-01-15 10:00:00 INFO Application started",
+            timestamp=base_time,
+            level=LogLevel.INFO,
+            message="Application started",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=2,
+            raw_line="2024-01-15 10:00:02 INFO Processing request",
+            timestamp=base_time + timedelta(seconds=2),
+            level=LogLevel.INFO,
+            message="Processing request",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=3,
+            raw_line="2024-01-15 10:00:05 ERROR Failed to connect to database server at 192.168.1.100",
+            timestamp=base_time + timedelta(seconds=5),
+            level=LogLevel.ERROR,
+            message="Failed to connect to database server at 192.168.1.100",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=4,
+            raw_line="2024-01-15 10:00:07 WARN High memory usage detected",
+            timestamp=base_time + timedelta(seconds=7),
+            level=LogLevel.WARNING,
+            message="High memory usage detected",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=5,
+            raw_line="2024-01-15 10:00:10 ERROR Failed to connect to database server at 10.0.0.50",
+            timestamp=base_time + timedelta(seconds=10),
+            level=LogLevel.ERROR,
+            message="Failed to connect to database server at 10.0.0.50",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=6,
+            raw_line="2024-01-15 10:00:12 INFO Retry successful",
+            timestamp=base_time + timedelta(seconds=12),
+            level=LogLevel.INFO,
+            message="Retry successful",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=7,
+            raw_line="2024-01-15 10:00:15 ERROR Null pointer exception in handler",
+            timestamp=base_time + timedelta(seconds=15),
+            level=LogLevel.ERROR,
+            message="Null pointer exception in handler",
+            metadata={}
+        ),
+        ParsedLogEntry(
+            line_number=8,
+            raw_line="2024-01-15 10:00:18 INFO Request completed",
+            timestamp=base_time + timedelta(seconds=18),
+            level=LogLevel.INFO,
+            message="Request completed",
+            metadata={}
+        ),
+    ]
+
+
+@pytest.fixture
+def sample_log_file(tmp_path: Path) -> Path:
+    """
+    Create a temporary log file with sample entries for testing.
+
+    Contains a mix of INFO, WARN, and ERROR entries suitable for
+    testing analyzers that read files directly.
+    """
+    log_content = """2024-01-15 10:00:00 INFO Application started
+2024-01-15 10:00:02 INFO Processing request from 192.168.1.100
+2024-01-15 10:00:05 ERROR Failed to connect to database: connection refused
+2024-01-15 10:00:07 WARN High memory usage detected: 85%
+2024-01-15 10:00:10 ERROR Failed to connect to database: timeout after 30s
+2024-01-15 10:00:12 INFO Retry successful
+2024-01-15 10:00:15 ERROR Null pointer exception in handler
+2024-01-15 10:00:18 INFO Request completed successfully
+2024-01-15 10:00:20 DEBUG Cleanup completed
+2024-01-15 10:00:22 INFO Shutdown requested
+"""
+    log_file = tmp_path / "sample.log"
+    log_file.write_text(log_content)
+    return log_file
+
+
+@pytest.fixture
+def mock_parser():
+    """
+    Create a mock parser for analyzer testing.
+
+    Returns a parser that can parse the sample_log_file entries
+    and yield ParsedLogEntry objects.
+    """
+    from datetime import datetime
+    from typing import Iterator
+    from log_analyzer_mcp.models import ParsedLogEntry, LogLevel
+    from log_analyzer_mcp.parsers.base import BaseLogParser
+    import re
+
+    class MockParser(BaseLogParser):
+        """Simple mock parser for testing."""
+
+        name = "mock"
+        description = "Mock parser for testing"
+        patterns = [r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"]
+
+        # Pattern to match timestamp level message format
+        _pattern = re.compile(
+            r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+"
+            r"(DEBUG|INFO|WARN|WARNING|ERROR|FATAL|CRITICAL)\s+"
+            r"(.+)$"
+        )
+
+        def can_parse(self, line: str) -> bool:
+            """Check if line can be parsed."""
+            return bool(self._pattern.match(line.strip()))
+
+        def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
+            """Parse a single log line."""
+            line = line.strip()
+            if not line:
+                return None
+
+            match = self._pattern.match(line)
+            if not match:
+                return None
+
+            timestamp_str, level_str, message = match.groups()
+
+            try:
+                timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                timestamp = None
+
+            level = self.normalize_level(level_str)
+
+            return self.create_entry(
+                line_number=line_number,
+                raw_line=line,
+                message=message,
+                timestamp=timestamp,
+                level=level,
+                metadata={}
+            )
+
+    return MockParser()
