@@ -82,6 +82,7 @@ def show_help() -> None:
     print("  codesdevs-log-analyzer           Run the MCP server")
     print("  codesdevs-log-analyzer install   Add to Claude Code settings")
     print("  codesdevs-log-analyzer uninstall Remove from Claude Code settings")
+    print("  codesdevs-log-analyzer demo      Run interactive demo")
     print("  codesdevs-log-analyzer --help    Show this help message")
 
 
@@ -95,6 +96,10 @@ def main() -> None:
         install()
     elif sys.argv[1] == "uninstall":
         uninstall()
+    elif sys.argv[1] == "demo":
+        from codesdevs_log_analyzer.demo import run_demo
+
+        run_demo()
     elif sys.argv[1] in ("--help", "-h", "help"):
         show_help()
     else:

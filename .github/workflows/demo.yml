@@ -1,0 +1,58 @@
+name: Demo GIF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demo/demo.tape"
+      - "codesdevs_log_analyzer/demo.py"
+      - "codesdevs_log_analyzer/cli.py"
+      - "test_logs/**"
+  workflow_dispatch:
+
+jobs:
+  regenerate:
+    name: Regenerate Demo GIF
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Install VHS
+        run: |
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+          sudo apt update && sudo apt install -y vhs
+
+      - name: Generate demo GIF
+        run: vhs demo/demo.tape -o demo/demo.gif
+
+      - name: Optimize GIF (optional)
+        run: |
+          if command -v gifsicle &> /dev/null; then
+            gifsicle -O3 --colors 128 demo/demo.gif -o demo/demo.gif
+          fi
+        continue-on-error: true
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add demo/demo.gif
+          git diff --staged --quiet || git commit -m "chore: regenerate demo GIF [skip ci]"
+          git push

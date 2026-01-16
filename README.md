@@ -22,8 +22,9 @@ An MCP server for AI-powered log analysis. Parse, search, and debug log files ac
 
 ## 🎬 Demo
 
-<!-- TODO: Add terminal recording GIF -->
-*Demo coming soon — showing log analysis in Claude Code*
+![Log Analyzer MCP Demo](demo/demo.gif)
+
+*Analyzing logs with 14 specialized tools*
 
 ## 🤔 Why?
 
