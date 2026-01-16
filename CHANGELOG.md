@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-01-16
+
+### Added
+
+- **New Tools**
+  - `log_analyzer_watch` - Watch log files for new entries using position-based polling
+    - Real-time monitoring with level and pattern filtering
+    - Position tracking for efficient incremental reads
+    - Supports level filtering (`ERROR`, `WARN,ERROR`, etc.)
+    - Supports regex pattern filtering
+  - `log_analyzer_suggest_patterns` - AI-powered pattern suggestions for debugging
+    - Analyzes log content to suggest useful search patterns
+    - Focus modes: `all`, `errors`, `security`, `performance`, `identifiers`
+    - Detects UUIDs, IPs, error templates, security indicators
+    - Priority-ranked suggestions (high/medium/low)
+
+- **New Analyzers**
+  - `LogWatcher` class for position-based log watching
+  - `PatternSuggester` class for pattern analysis and suggestions
+  - `WatchResult`, `SuggestedPattern`, `PatternSuggestionResult` dataclasses
+
+### Changed
+
+- Total tools increased from 7 to 9
+- Test suite expanded from 248 to 280 tests
+- Updated documentation with new tool examples and parameters
+
 ## [0.1.0] - 2026-01-16
 
 ### Added
@@ -62,4 +89,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory-efficient streaming for large files (100MB+)
 - Sub-10 second processing for 100MB files
 
+[0.2.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.2.0
 [0.1.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.1.0

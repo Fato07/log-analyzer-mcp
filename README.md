@@ -13,6 +13,8 @@ An MCP (Model Context Protocol) server for AI-powered log analysis. Parse, searc
 - **Error Extraction** — Groups similar errors, captures stack traces, counts occurrences
 - **Summarization** — Generates debugging insights with anomaly detection
 - **Correlation** — Finds related events around error occurrences
+- **Real-time Watching** — Monitor logs for new entries with position tracking
+- **Pattern Suggestions** — AI-powered pattern discovery for debugging
 - **Streaming** — Handles large files (1GB+) without loading into memory
 - **Multiple Formats** — Markdown and JSON output
 
@@ -118,6 +120,8 @@ What happened in the 60 seconds before each OutOfMemoryError in my Java logs?
 | `log_analyzer_tail` | Get recent log entries |
 | `log_analyzer_correlate` | Find events around anchor patterns |
 | `log_analyzer_diff` | Compare log files or time periods |
+| `log_analyzer_watch` | Watch log file for new entries (polling-based) |
+| `log_analyzer_suggest_patterns` | Suggest useful search patterns based on log content |
 
 ## Examples
 
@@ -192,6 +196,52 @@ Extract all errors from /var/log/java-app.log, group similar ones
 ...
 ```
 
+### Watch Logs for New Errors
+
+**Prompt:**
+```
+Watch /var/log/app.log for new errors while I test my changes
+```
+
+**Usage:**
+```
+# First call - get current position
+log_analyzer_watch(file_path="/var/log/app.log", from_position=0)
+# Returns: current_position=123456
+
+# After triggering action - check for new errors
+log_analyzer_watch(file_path="/var/log/app.log", from_position=123456, level_filter="ERROR")
+# Returns: new_entries=[...], current_position=234567
+```
+
+### Get Pattern Suggestions
+
+**Prompt:**
+```
+What patterns should I search for in /var/log/app.log to debug this issue?
+```
+
+**Output:**
+```markdown
+## Suggested Patterns for /var/log/app.log
+
+### High Priority
+
+1. **Database Connection Errors** (23 matches)
+   - Pattern: `connection (refused|timeout|reset)`
+   - Example: "connection refused to postgres:5432"
+
+2. **Authentication Failures** (15 matches)
+   - Pattern: `(auth|login|authentication) failed`
+   - Example: "authentication failed for user admin"
+
+### Medium Priority
+
+3. **Request IDs** (1,234 matches)
+   - Pattern: `req-[a-f0-9]{8}`
+   - Use for tracing specific requests
+```
+
 ## Tool Parameters
 
 ### log_analyzer_parse
@@ -241,6 +291,41 @@ Extract all errors from /var/log/java-app.log, group similar ones
 | `anchor_pattern` | string | required | Pattern to correlate around |
 | `window_seconds` | int | 60 | Time window |
 | `max_anchors` | int | 10 | Maximum anchor points |
+
+### log_analyzer_watch
+
+Watch a log file for new entries using position-based polling. Useful for real-time monitoring.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | required | Path to log file |
+| `from_position` | int | 0 | File position to start from (0 = get current end) |
+| `max_lines` | int | 100 | Maximum lines to read per call |
+| `level_filter` | string | null | Filter by level (e.g., `ERROR` or `ERROR,WARN`) |
+| `pattern_filter` | string | null | Regex pattern to filter messages |
+
+**Usage Flow:**
+1. First call with `from_position=0` returns current file position
+2. Subsequent calls with returned position get new entries
+3. Repeat to "watch" for new log entries
+
+### log_analyzer_suggest_patterns
+
+Analyze a log file and suggest useful search patterns based on content analysis.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | required | Path to log file |
+| `focus` | string | all | Focus area: `all`, `errors`, `security`, `performance`, `identifiers` |
+| `max_patterns` | int | 10 | Maximum patterns to suggest |
+| `max_lines` | int | 10000 | Lines to analyze |
+
+**Focus Areas:**
+- `all` — Analyze all pattern categories
+- `errors` — Focus on error message patterns
+- `security` — Focus on auth failures, unauthorized access
+- `performance` — Focus on slow requests, timeouts
+- `identifiers` — Focus on UUIDs, request IDs, user IDs
 
 ## Development
 

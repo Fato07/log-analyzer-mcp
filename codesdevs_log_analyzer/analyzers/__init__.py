@@ -11,10 +11,19 @@ from codesdevs_log_analyzer.analyzers.error_extractor import (
     ErrorExtractor,
     ErrorGroup,
 )
+from codesdevs_log_analyzer.analyzers.log_watcher import (
+    LogWatcher,
+    WatchResult,
+)
 from codesdevs_log_analyzer.analyzers.pattern_matcher import (
     PatternMatcher,
     SearchMatch,
     SearchResult,
+)
+from codesdevs_log_analyzer.analyzers.pattern_suggester import (
+    PatternSuggester,
+    PatternSuggestionResult,
+    SuggestedPattern,
 )
 from codesdevs_log_analyzer.analyzers.summarizer import (
     LogSummary,
@@ -42,4 +51,11 @@ __all__ = [
     "CorrelationWindow",
     "CorrelationResult",
     "StreamingCorrelator",
+    # Log watching
+    "LogWatcher",
+    "WatchResult",
+    # Pattern suggestion
+    "PatternSuggester",
+    "PatternSuggestionResult",
+    "SuggestedPattern",
 ]

@@ -11,6 +11,8 @@ from mcp.server.fastmcp import FastMCP
 from codesdevs_log_analyzer.analyzers import (
     Correlator,
     ErrorExtractor,
+    LogWatcher,
+    PatternSuggester,
     Summarizer,
 )
 from codesdevs_log_analyzer.models import (
@@ -997,6 +999,260 @@ def log_analyzer_diff(
 
     except Exception as e:
         return handle_tool_error(e, file_path_a)
+
+
+# =============================================================================
+# Tool 8: log_analyzer_watch (P1)
+# =============================================================================
+
+
+@mcp.tool()
+def log_analyzer_watch(
+    file_path: str,
+    from_position: int = 0,
+    max_lines: int = 100,
+    level_filter: str | None = None,
+    pattern_filter: str | None = None,
+    response_format: str = "markdown",
+) -> str:
+    """
+    Watch a log file for new entries since a given position.
+
+    This enables polling-based log watching. First call with from_position=0
+    returns the current end-of-file position. Subsequent calls with the
+    returned position get new entries added since then.
+
+    Args:
+        file_path: Path to the log file to watch
+        from_position: File position to read from. Use 0 for initial call
+                       (returns current end position), or use the returned
+                       current_position from a previous call.
+        max_lines: Maximum lines to read per call (1-1000, default: 100)
+        level_filter: Filter by log levels, comma-separated (e.g., "ERROR,WARN")
+        pattern_filter: Regex pattern to filter messages
+        response_format: Output format - 'markdown' or 'json'
+
+    Returns:
+        New log entries since the last position, with updated position for
+        the next call.
+    """
+    try:
+        if not os.path.isfile(file_path):
+            return handle_tool_error(FileNotFoundError(), file_path)
+
+        # Get parser for this file
+        parser, _ = detect_format(file_path)
+
+        # Use the watcher
+        watcher = LogWatcher()
+        result = watcher.watch(
+            file_path=file_path,
+            parser=parser,
+            from_position=from_position,
+            max_lines=min(max_lines, 1000),
+            level_filter=level_filter,
+            pattern_filter=pattern_filter,
+        )
+
+        output = {
+            "file": file_path,
+            "from_position": from_position,
+            "current_position": result.current_position,
+            "file_size": result.file_size,
+            "lines_read": result.lines_read,
+            "new_entries_count": len(result.new_entries),
+            "has_more": result.has_more,
+            "new_entries": [
+                {
+                    "line_number": e.line_number,
+                    "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+                    "level": e.level.value if e.level else None,
+                    "message": e.message[:500],
+                    "metadata": e.metadata,
+                }
+                for e in result.new_entries
+            ],
+        }
+
+        if response_format.lower() == "json":
+            return json.dumps(output, indent=2)
+
+        # Markdown format
+        if from_position == 0:
+            # Initial call - just report position
+            md = f"""## Log Watch Initialized
+
+**File:** `{file_path}`
+**File Size:** {result.file_size:,} bytes
+**Current Position:** {result.current_position}
+
+Use `from_position={result.current_position}` in subsequent calls to get new entries.
+"""
+        else:
+            md = f"""## Log Watch Results
+
+**File:** `{file_path}`
+**Position:** {from_position} → {result.current_position}
+**New Entries:** {len(result.new_entries)}
+"""
+            if level_filter:
+                md += f"**Level Filter:** {level_filter}\n"
+            if pattern_filter:
+                md += f"**Pattern Filter:** `{pattern_filter}`\n"
+
+            if result.has_more:
+                md += "\n⚠️ More entries available. Call again with same position to continue.\n"
+
+            if result.new_entries:
+                md += "\n### New Entries\n\n```\n"
+                for entry in result.new_entries:
+                    ts = entry.timestamp.isoformat()[:19] if entry.timestamp else "N/A"
+                    level = entry.level.value if entry.level else "---"
+                    msg = entry.message[:120]
+                    md += f"[{ts}] {level:8} {msg}\n"
+                md += "```\n"
+            else:
+                md += "\nNo new entries since last position.\n"
+
+            md += f"\n**Next call:** `from_position={result.current_position}`"
+
+        return md
+
+    except Exception as e:
+        return handle_tool_error(e, file_path)
+
+
+# =============================================================================
+# Tool 9: log_analyzer_suggest_patterns (P1)
+# =============================================================================
+
+
+@mcp.tool()
+def log_analyzer_suggest_patterns(
+    file_path: str,
+    focus: str = "all",
+    max_patterns: int = 10,
+    max_lines: int = 10000,
+    response_format: str = "markdown",
+) -> str:
+    """
+    Analyze a log file and suggest useful search patterns.
+
+    Scans the log content to identify patterns for:
+    - Common error templates (normalized messages)
+    - Identifiers (UUIDs, request IDs, user IDs, session IDs)
+    - Security indicators (auth failures, suspicious activity)
+    - Performance indicators (slow requests, high memory)
+    - HTTP endpoints with errors
+
+    Args:
+        file_path: Path to the log file to analyze
+        focus: Analysis focus - 'all', 'errors', 'security', 'performance',
+               or 'identifiers' (default: 'all')
+        max_patterns: Maximum patterns to suggest (1-20, default: 10)
+        max_lines: Maximum lines to analyze (100-100000, default: 10000)
+        response_format: Output format - 'markdown' or 'json'
+
+    Returns:
+        Suggested search patterns with descriptions, match counts, and examples.
+    """
+    try:
+        if not os.path.isfile(file_path):
+            return handle_tool_error(FileNotFoundError(), file_path)
+
+        # Validate focus
+        valid_focuses = {"all", "errors", "security", "performance", "identifiers"}
+        if focus.lower() not in valid_focuses:
+            return f"Error: Invalid focus '{focus}'. Valid options: {', '.join(valid_focuses)}"
+
+        # Get parser for this file
+        parser, confidence = detect_format(file_path)
+        file_info = get_file_info(file_path)
+
+        # Use the pattern suggester
+        suggester = PatternSuggester()
+        result = suggester.analyze_file(
+            file_path=file_path,
+            parser=parser,
+            focus=focus.lower(),
+            max_patterns=min(max_patterns, 20),
+            max_lines=min(max_lines, 100000),
+        )
+
+        output = {
+            "file": file_path,
+            "format": {"name": parser.name, "confidence": round(confidence, 2)},
+            "file_size": file_info,
+            "focus": focus,
+            "analysis_summary": result.analysis_summary,
+            "lines_analyzed": result.lines_analyzed,
+            "error_count": result.error_count,
+            "warning_count": result.warning_count,
+            "patterns": [p.to_dict() for p in result.patterns],
+        }
+
+        if response_format.lower() == "json":
+            return json.dumps(output, indent=2)
+
+        # Markdown format
+        md = f"""## Suggested Search Patterns
+
+**File:** `{file_path}`
+**Format:** {parser.name} (confidence: {confidence:.0%})
+**Focus:** {focus}
+
+### Summary
+{result.analysis_summary}
+
+"""
+        if not result.patterns:
+            md += "*No significant patterns found. Try analyzing more lines or a different focus.*\n"
+        else:
+            # Group by priority
+            high_priority = [p for p in result.patterns if p.priority == "high"]
+            medium_priority = [p for p in result.patterns if p.priority == "medium"]
+            low_priority = [p for p in result.patterns if p.priority == "low"]
+
+            if high_priority:
+                md += "### 🔴 High Priority\n\n"
+                for i, p in enumerate(high_priority, 1):
+                    md += f"**{i}. {p.description}**\n"
+                    md += f"- **Pattern:** `{p.pattern}`\n"
+                    md += f"- **Category:** {p.category}\n"
+                    if p.examples:
+                        md += f"- **Example:** `{p.examples[0][:100]}`\n"
+                    md += "\n"
+
+            if medium_priority:
+                md += "### 🟡 Medium Priority\n\n"
+                for i, p in enumerate(medium_priority, 1):
+                    md += f"**{i}. {p.description}**\n"
+                    md += f"- **Pattern:** `{p.pattern}`\n"
+                    md += f"- **Category:** {p.category}\n"
+                    if p.examples:
+                        md += f"- **Example:** `{p.examples[0][:100]}`\n"
+                    md += "\n"
+
+            if low_priority:
+                md += "### 🟢 Low Priority\n\n"
+                for i, p in enumerate(low_priority, 1):
+                    md += f"**{i}. {p.description}**\n"
+                    md += f"- **Pattern:** `{p.pattern}`\n"
+                    md += f"- **Category:** {p.category}\n"
+                    md += "\n"
+
+        md += """
+### Usage Tips
+Use these patterns with `log_analyzer_search`:
+```
+log_analyzer_search(file_path, pattern="<pattern>", is_regex=True)
+```
+"""
+
+        return md
+
+    except Exception as e:
+        return handle_tool_error(e, file_path)
 
 
 # =============================================================================
