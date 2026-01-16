@@ -1,0 +1,11 @@
+2026-01-15T10:30:00.123456789Z stdout F Application starting...
+2026-01-15T10:30:01.234567890Z stdout F Configuration loaded successfully
+2026-01-15T10:30:02.345678901Z stderr F Error: Failed to connect to database
+2026-01-15T10:30:03.456789012Z stdout F Retrying database connection...
+2026-01-15T10:30:04.567890123Z stdout F Database connected
+2026-01-15T10:30:05.678901234Z stdout F Server listening on port 8080
+2026-01-15T10:30:06.789012345Z stderr F Warning: High memory usage detected
+2026-01-15T10:30:07.890123456Z stdout P Starting long output
+2026-01-15T10:30:08.901234567Z stdout F message that spans multiple lines
+{"log":"JSON format log entry\n","stream":"stdout","time":"2026-01-15T10:30:09.012345678Z"}
+{"log":"Error in JSON format\n","stream":"stderr","time":"2026-01-15T10:30:10.123456789Z"}

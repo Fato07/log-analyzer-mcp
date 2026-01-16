@@ -1,1 +1,1 @@
-"""Tests for log analyzers."""
+"""Analyzer tests."""

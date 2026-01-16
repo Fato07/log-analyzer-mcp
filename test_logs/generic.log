@@ -1,0 +1,11 @@
+2026-01-15 10:30:00 Starting application server
+2026-01-15T10:30:01Z INFO Initialization complete
+[2026-01-15 10:30:02] DEBUG Loading modules
+01/15/2026 10:30:03 WARN Configuration file not found, using defaults
+15/01/2026 10:30:04 ERROR Failed to open socket
+1736934605 Unix timestamp log entry
+1736934606000 Millisecond timestamp entry
+Simple log entry without timestamp
+ERROR Critical failure detected
+WARN Low disk space warning
+2026-01-15 10:30:10,123 Mixed format log entry with comma milliseconds

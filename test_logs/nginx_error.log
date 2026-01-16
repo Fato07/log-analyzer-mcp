@@ -1,0 +1,6 @@
+[Thu Jan 15 10:30:00.123456 2026] [error] [pid 1234] [client 192.168.1.100:54321] ModSecurity: Access denied with code 403
+[Thu Jan 15 10:30:05 2026] [warn] [pid 1234] worker_connections are not enough, reusing connections
+[Thu Jan 15 10:30:10.654321 2026] [error] [pid 1235:tid 140123456789] [client 10.0.0.1:8080] upstream prematurely closed connection
+[Thu Jan 15 10:30:15 2026] [notice] [pid 1236] signal 15 received, shutting down
+[Thu Jan 15 10:30:20 2026] [error] [pid 1237] connect() to unix:/var/run/php/php-fpm.sock failed (111: Connection refused)
+[Thu Jan 15 10:30:25.999999 2026] [crit] [pid 1238] [client 192.168.1.50:12345] SSL handshake failed: SSL_ERROR_SYSCALL

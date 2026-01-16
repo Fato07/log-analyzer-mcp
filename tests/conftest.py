@@ -1,168 +1,207 @@
-"""Shared pytest fixtures for log analyzer tests."""
+"""Shared pytest fixtures for log-analyzer-mcp tests."""
 
 import os
 import tempfile
-from datetime import datetime, timedelta
-from typing import Iterator
+from pathlib import Path
+from typing import Generator
 
 import pytest
 
-from log_analyzer_mcp.parsers.base import BaseLogParser, ParsedLogEntry
 
-
-class MockParser(BaseLogParser):
-    """Mock parser for testing."""
-
-    name = "mock"
-    patterns = []
-
-    def can_parse(self, line: str) -> bool:
-        return True
-
-    def parse_line(self, line: str, line_number: int) -> ParsedLogEntry | None:
-        # Simple mock parsing
-        level = None
-        timestamp = None
-
-        # Try to extract level
-        for lvl in ['ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG']:
-            if lvl in line.upper():
-                level = lvl
-                break
-
-        # Try to extract timestamp (ISO format)
-        import re
-        ts_match = re.search(r'(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})', line)
-        if ts_match:
-            try:
-                from dateutil import parser as date_parser
-                timestamp = date_parser.parse(ts_match.group(1))
-            except Exception:
-                pass
-
-        return ParsedLogEntry(
-            line_number=line_number,
-            raw_line=line,
-            timestamp=timestamp,
-            level=level,
-            message=line,
-            metadata={}
-        )
+# Get the test_logs directory
+TEST_LOGS_DIR = Path(__file__).parent.parent / "test_logs"
 
 
 @pytest.fixture
-def mock_parser() -> MockParser:
-    """Provide a mock parser for testing."""
-    return MockParser()
+def test_logs_dir() -> Path:
+    """Return path to test_logs directory."""
+    return TEST_LOGS_DIR
 
 
 @pytest.fixture
-def sample_log_entries() -> list[ParsedLogEntry]:
-    """Provide sample log entries for testing."""
-    base_time = datetime(2024, 1, 15, 10, 0, 0)
-    entries = [
-        ParsedLogEntry(
-            line_number=1,
-            raw_line="2024-01-15 10:00:00 INFO Starting application",
-            timestamp=base_time,
-            level="INFO",
-            message="Starting application",
-            metadata={}
-        ),
-        ParsedLogEntry(
-            line_number=2,
-            raw_line="2024-01-15 10:00:01 DEBUG Loading configuration",
-            timestamp=base_time + timedelta(seconds=1),
-            level="DEBUG",
-            message="Loading configuration",
-            metadata={}
-        ),
-        ParsedLogEntry(
-            line_number=3,
-            raw_line="2024-01-15 10:00:05 ERROR Failed to connect to database: Connection refused",
-            timestamp=base_time + timedelta(seconds=5),
-            level="ERROR",
-            message="Failed to connect to database: Connection refused",
-            metadata={}
-        ),
-        ParsedLogEntry(
-            line_number=4,
-            raw_line="2024-01-15 10:00:06 WARN Retrying connection attempt 1/3",
-            timestamp=base_time + timedelta(seconds=6),
-            level="WARN",
-            message="Retrying connection attempt 1/3",
-            metadata={}
-        ),
-        ParsedLogEntry(
-            line_number=5,
-            raw_line="2024-01-15 10:00:10 ERROR Failed to connect to database: Connection refused",
-            timestamp=base_time + timedelta(seconds=10),
-            level="ERROR",
-            message="Failed to connect to database: Connection refused",
-            metadata={}
-        ),
-        ParsedLogEntry(
-            line_number=6,
-            raw_line="2024-01-15 10:00:15 INFO Connection established",
-            timestamp=base_time + timedelta(seconds=15),
-            level="INFO",
-            message="Connection established",
-            metadata={}
-        ),
-        ParsedLogEntry(
-            line_number=7,
-            raw_line="2024-01-15 10:00:20 ERROR NullPointerException in UserService",
-            timestamp=base_time + timedelta(seconds=20),
-            level="ERROR",
-            message="NullPointerException in UserService",
-            metadata={}
-        ),
-    ]
-    return entries
+def syslog_file() -> Path:
+    """Path to syslog test file."""
+    return TEST_LOGS_DIR / "syslog.log"
 
 
 @pytest.fixture
-def sample_log_file(tmp_path) -> str:
+def nginx_access_file() -> Path:
+    """Path to nginx access log test file."""
+    return TEST_LOGS_DIR / "nginx_access.log"
+
+
+@pytest.fixture
+def nginx_error_file() -> Path:
+    """Path to nginx error log test file."""
+    return TEST_LOGS_DIR / "nginx_error.log"
+
+
+@pytest.fixture
+def jsonl_file() -> Path:
+    """Path to JSONL test file."""
+    return TEST_LOGS_DIR / "app.jsonl"
+
+
+@pytest.fixture
+def python_log_file() -> Path:
+    """Path to Python log test file."""
+    return TEST_LOGS_DIR / "python_app.log"
+
+
+@pytest.fixture
+def java_log_file() -> Path:
+    """Path to Java log test file."""
+    return TEST_LOGS_DIR / "java_app.log"
+
+
+@pytest.fixture
+def docker_log_file() -> Path:
+    """Path to Docker log test file."""
+    return TEST_LOGS_DIR / "docker_container.log"
+
+
+@pytest.fixture
+def kubernetes_log_file() -> Path:
+    """Path to Kubernetes log test file."""
+    return TEST_LOGS_DIR / "kubernetes_pod.log"
+
+
+@pytest.fixture
+def generic_log_file() -> Path:
+    """Path to generic log test file."""
+    return TEST_LOGS_DIR / "generic.log"
+
+
+@pytest.fixture
+def malformed_log_file() -> Path:
+    """Path to malformed log test file."""
+    return TEST_LOGS_DIR / "malformed.log"
+
+
+@pytest.fixture
+def temp_log_file() -> Generator[Path, None, None]:
     """Create a temporary log file for testing."""
-    log_content = """2024-01-15 10:00:00 INFO Starting application
-2024-01-15 10:00:01 DEBUG Loading configuration
-2024-01-15 10:00:05 ERROR Failed to connect to database: Connection refused
-2024-01-15 10:00:06 WARN Retrying connection attempt 1/3
-2024-01-15 10:00:10 ERROR Failed to connect to database: Connection refused
-2024-01-15 10:00:15 INFO Connection established
-2024-01-15 10:00:20 ERROR NullPointerException in UserService
-Traceback (most recent call last):
-  File "/app/service.py", line 42, in process
-    user = self.get_user(user_id)
-  File "/app/service.py", line 55, in get_user
-    return self.db.query(User).filter_by(id=user_id).first()
-NullPointerException: user_id was None
-2024-01-15 10:00:25 INFO Request completed in 150ms
-2024-01-15 10:00:30 WARN High memory usage detected: 85%
-"""
-    log_file = tmp_path / "test.log"
-    log_file.write_text(log_content)
-    return str(log_file)
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
+        f.write("2026-01-15 10:30:00 INFO Test message 1\n")
+        f.write("2026-01-15 10:30:01 ERROR Test error message\n")
+        f.write("2026-01-15 10:30:02 DEBUG Test debug message\n")
+        temp_path = Path(f.name)
+
+    yield temp_path
+
+    # Cleanup
+    if temp_path.exists():
+        os.unlink(temp_path)
 
 
 @pytest.fixture
-def sample_web_log_file(tmp_path) -> str:
-    """Create a temporary web access log file for testing."""
-    log_content = """2024-01-15 10:00:00 INFO 192.168.1.1 GET /api/users 200 150ms
-2024-01-15 10:00:01 INFO 192.168.1.2 GET /api/users/123 200 50ms
-2024-01-15 10:00:02 WARN 192.168.1.1 POST /api/login 401 10ms
-2024-01-15 10:00:03 WARN 192.168.1.1 POST /api/login 401 10ms
-2024-01-15 10:00:04 WARN 192.168.1.1 POST /api/login 401 10ms
-2024-01-15 10:00:05 ERROR 192.168.1.3 GET /api/users/999 500 5000ms
-2024-01-15 10:00:10 INFO 192.168.1.2 GET /api/products 200 200ms
-2024-01-15 10:05:00 INFO 192.168.1.1 GET /api/health 200 5ms
-"""
-    log_file = tmp_path / "access.log"
-    log_file.write_text(log_content)
-    return str(log_file)
+def large_temp_file() -> Generator[Path, None, None]:
+    """Create a large temporary file for performance testing."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
+        for i in range(10000):
+            f.write(f"2026-01-15 10:30:{i % 60:02d} INFO Message number {i}\n")
+        temp_path = Path(f.name)
+
+    yield temp_path
+
+    # Cleanup
+    if temp_path.exists():
+        os.unlink(temp_path)
 
 
 @pytest.fixture
-def entries_iterator(sample_log_entries: list[ParsedLogEntry]) -> Iterator[ParsedLogEntry]:
-    """Provide an iterator of log entries."""
-    return iter(sample_log_entries)
+def gzip_temp_file() -> Generator[Path, None, None]:
+    """Create a gzip compressed temporary log file."""
+    import gzip as gz
+
+    with tempfile.NamedTemporaryFile(suffix=".log.gz", delete=False) as f:
+        temp_path = Path(f.name)
+
+    with gz.open(temp_path, "wt") as f:
+        f.write("2026-01-15 10:30:00 INFO Compressed message 1\n")
+        f.write("2026-01-15 10:30:01 ERROR Compressed error\n")
+
+    yield temp_path
+
+    # Cleanup
+    if temp_path.exists():
+        os.unlink(temp_path)
+
+
+# Sample log lines for quick tests
+SAMPLE_SYSLOG_LINES = [
+    "Jan 15 10:30:00 myhost sshd[1234]: Accepted password for user",
+    "Jan 15 10:30:01 myhost kernel: [12345.678901] eth0: link up",
+]
+
+SAMPLE_APACHE_ACCESS_LINES = [
+    '192.168.1.1 - - [15/Jan/2026:10:30:00 +0000] "GET /index.html HTTP/1.1" 200 1234 "-" "Mozilla/5.0"',
+    '10.0.0.1 - admin [15/Jan/2026:10:30:01 +0000] "POST /api/data HTTP/1.1" 500 45 "-" "curl/7.68.0"',
+]
+
+SAMPLE_JSONL_LINES = [
+    '{"timestamp":"2026-01-15T10:30:00Z","level":"info","message":"Test message"}',
+    '{"timestamp":"2026-01-15T10:30:01Z","level":"error","message":"Test error","code":500}',
+]
+
+SAMPLE_PYTHON_LINES = [
+    "2026-01-15 10:30:00,123 - myapp.main - INFO - Application starting",
+    "2026-01-15 10:30:01,456 - myapp.worker - ERROR - Task failed",
+]
+
+SAMPLE_JAVA_LINES = [
+    "2026-01-15 10:30:00,123 INFO  [main] com.example.App - Starting",
+    "2026-01-15 10:30:01,456 ERROR [pool-1-thread-1] com.example.Svc - Failed",
+]
+
+SAMPLE_DOCKER_LINES = [
+    "2026-01-15T10:30:00.123456789Z stdout F Application starting",
+    "2026-01-15T10:30:01.234567890Z stderr F Error message",
+]
+
+SAMPLE_KUBERNETES_LINES = [
+    '2026-01-15T10:30:00.123Z level=info msg="Pod starting" pod=myapp',
+    "I0115 10:30:01.234567 12345 controller.go:123] Starting",
+]
+
+
+@pytest.fixture
+def sample_syslog_lines() -> list[str]:
+    """Sample syslog lines for testing."""
+    return SAMPLE_SYSLOG_LINES.copy()
+
+
+@pytest.fixture
+def sample_apache_lines() -> list[str]:
+    """Sample Apache access log lines for testing."""
+    return SAMPLE_APACHE_ACCESS_LINES.copy()
+
+
+@pytest.fixture
+def sample_jsonl_lines() -> list[str]:
+    """Sample JSONL lines for testing."""
+    return SAMPLE_JSONL_LINES.copy()
+
+
+@pytest.fixture
+def sample_python_lines() -> list[str]:
+    """Sample Python log lines for testing."""
+    return SAMPLE_PYTHON_LINES.copy()
+
+
+@pytest.fixture
+def sample_java_lines() -> list[str]:
+    """Sample Java log lines for testing."""
+    return SAMPLE_JAVA_LINES.copy()
+
+
+@pytest.fixture
+def sample_docker_lines() -> list[str]:
+    """Sample Docker log lines for testing."""
+    return SAMPLE_DOCKER_LINES.copy()
+
+
+@pytest.fixture
+def sample_kubernetes_lines() -> list[str]:
+    """Sample Kubernetes log lines for testing."""
+    return SAMPLE_KUBERNETES_LINES.copy()

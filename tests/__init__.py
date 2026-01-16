@@ -1,1 +1,1 @@
-"""Tests for log analyzer MCP server."""
+"""Tests for log-analyzer-mcp."""
