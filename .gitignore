@@ -59,3 +59,7 @@ specs/
 
 # MCP Registry tokens
 .mcpregistry_*
+
+# Internal planning docs
+ROADMAP.md
+ANNOUNCEMENTS.md
