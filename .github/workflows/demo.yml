@@ -32,22 +32,10 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Install VHS
-        run: |
-          sudo mkdir -p /etc/apt/keyrings
-          curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
-          echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
-          sudo apt update && sudo apt install -y vhs
-
       - name: Generate demo GIF
-        run: vhs demo/demo.tape -o demo/demo.gif
-
-      - name: Optimize GIF (optional)
-        run: |
-          if command -v gifsicle &> /dev/null; then
-            gifsicle -O3 --colors 128 demo/demo.gif -o demo/demo.gif
-          fi
-        continue-on-error: true
+        uses: charmbracelet/vhs-action@v2
+        with:
+          path: demo/demo.tape
 
       - name: Commit and push if changed
         run: |
