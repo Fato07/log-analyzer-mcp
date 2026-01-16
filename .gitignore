@@ -56,3 +56,6 @@ Thumbs.db
 CLAUDE.md
 SPEC.md
 specs/
+
+# MCP Registry tokens
+.mcpregistry_*

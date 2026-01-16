@@ -1,6 +1,6 @@
 [project]
 name = "codesdevs-log-analyzer"
-version = "0.4.0"
+version = "0.4.1"
 description = "MCP server for intelligent log file analysis and debugging assistance"
 readme = "README.md"
 license = { text = "MIT" }
