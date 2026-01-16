@@ -1,22 +1,22 @@
-# 📊 Log Analyzer MCP
+# Log Analyzer MCP
 
 [![PyPI version](https://badge.fury.io/py/log-analyzer-mcp.svg)](https://badge.fury.io/py/log-analyzer-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-An MCP (Model Context Protocol) server that helps AI assistants analyze, parse, and debug log files. Designed for developers who want AI-powered debugging assistance directly in Claude Code or any MCP-compatible client.
+An MCP (Model Context Protocol) server for AI-powered log analysis. Parse, search, and debug log files directly in Claude Code or any MCP-compatible client.
 
-## ✨ Features
+## Features
 
-- **🔍 Auto-Detection**: Automatically identifies log format from 9+ common formats
-- **🔎 Smart Search**: Pattern search with context lines, regex support, and time filtering
-- **🚨 Error Extraction**: Groups similar errors, captures stack traces, counts occurrences
-- **📈 Summarization**: Generates debugging insights with anomaly detection
-- **🔗 Correlation**: Finds related events around error occurrences
-- **⚡ Streaming**: Handles large files (1GB+) without loading into memory
-- **📦 Multiple Formats**: Supports Markdown and JSON output
+- **Auto-Detection** — Identifies log format from 9+ common formats
+- **Smart Search** — Pattern matching with context lines, regex support, and time filtering
+- **Error Extraction** — Groups similar errors, captures stack traces, counts occurrences
+- **Summarization** — Generates debugging insights with anomaly detection
+- **Correlation** — Finds related events around error occurrences
+- **Streaming** — Handles large files (1GB+) without loading into memory
+- **Multiple Formats** — Markdown and JSON output
 
-## 🎯 Supported Log Formats
+## Supported Log Formats
 
 | Format | Example Pattern |
 |--------|-----------------|
@@ -30,19 +30,19 @@ An MCP (Model Context Protocol) server that helps AI assistants analyze, parse, 
 | Kubernetes | `level=error msg="..." ts=2026-01-15T10:30:00Z` |
 | Generic Timestamp | Any line with recognizable timestamp |
 
-## 📦 Installation
+## Installation
 
-### Using pip
+### pip
 ```bash
 pip install log-analyzer-mcp
 ```
 
-### Using uv
+### uv
 ```bash
 uv tool install log-analyzer-mcp
 ```
 
-### Claude Code Integration
+### Claude Code
 
 Add to your `~/.claude/settings.json`:
 
@@ -70,9 +70,9 @@ Or if installed via pip:
 
 Restart Claude Code and the tools will be available.
 
-## 🚀 Usage
+## Usage
 
-### Natural Language (Claude Code)
+### With Claude Code
 
 Just describe what you need:
 
@@ -104,7 +104,7 @@ What happened in the 60 seconds before each OutOfMemoryError in my Java logs?
 | `log_analyzer_correlate` | Find events around anchor patterns |
 | `log_analyzer_diff` | Compare log files or time periods |
 
-## 📖 Examples
+## Examples
 
 ### Analyze a Log File
 
@@ -177,7 +177,7 @@ Extract all errors from /var/log/java-app.log, group similar ones
 ...
 ```
 
-## 🔧 Tool Parameters
+## Tool Parameters
 
 ### log_analyzer_parse
 
@@ -227,7 +227,7 @@ Extract all errors from /var/log/java-app.log, group similar ones
 | `window_seconds` | int | 60 | Time window |
 | `max_anchors` | int | 10 | Maximum anchor points |
 
-## 🛠️ Development
+## Development
 
 ### Setup
 ```bash
@@ -256,20 +256,20 @@ uv run log-analyzer-mcp
 npx @modelcontextprotocol/inspector uv run log-analyzer-mcp
 ```
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
-## 🤝 Contributing
+## Contributing
 
-Contributions welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
+Contributions welcome! Please open an issue or submit a pull request.
 
-## 📬 Support
+## Links
 
-- 🐛 [Report bugs](https://github.com/codesdevs/log-analyzer-mcp/issues)
-- 💡 [Request features](https://github.com/codesdevs/log-analyzer-mcp/issues)
-- 💬 [Discussions](https://github.com/codesdevs/log-analyzer-mcp/discussions)
+- [Report bugs](https://github.com/codesdevs/log-analyzer-mcp/issues)
+- [Request features](https://github.com/codesdevs/log-analyzer-mcp/issues)
+- [Discussions](https://github.com/codesdevs/log-analyzer-mcp/discussions)
 
 ---
 
-Built with ❤️ by [CodesDevs](https://codesdevs.com)
+Built by [Fato07](https://github.com/Fato07) at [CodesDevs](https://codesdevs.com)
