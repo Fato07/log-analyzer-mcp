@@ -1,7 +1,8 @@
 """Tests for pattern_matcher analyzer."""
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from codesdevs_log_analyzer.analyzers.pattern_matcher import (
     PatternMatcher,

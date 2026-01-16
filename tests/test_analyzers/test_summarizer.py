@@ -1,16 +1,12 @@
 """Tests for summarizer analyzer."""
 
-import pytest
 from datetime import datetime, timedelta
 
 from codesdevs_log_analyzer.analyzers.summarizer import (
-    Summarizer,
     LogSummary,
-    PerformanceMetrics,
-    SecurityIndicators,
+    Summarizer,
     summarize_log,
 )
-from codesdevs_log_analyzer.models import LogFormat
 from codesdevs_log_analyzer.parsers.base import ParsedLogEntry
 
 

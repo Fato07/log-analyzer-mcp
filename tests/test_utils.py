@@ -1,32 +1,31 @@
 """Tests for utility modules."""
 
-import tempfile
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
-from codesdevs_log_analyzer.utils.time_utils import (
-    parse_timestamp,
-    format_timestamp,
-    parse_relative_time,
-    time_ago,
-    extract_timestamp_from_line,
-)
+from codesdevs_log_analyzer.models import LogLevel, ParsedLogEntry
 from codesdevs_log_analyzer.utils.file_handler import (
-    stream_file,
-    read_tail,
-    detect_encoding,
-    is_gzip_file,
     count_lines,
+    detect_encoding,
     get_file_info,
+    is_gzip_file,
+    read_tail,
+    stream_file,
 )
 from codesdevs_log_analyzer.utils.formatters import (
     format_as_json,
     format_as_markdown,
     truncate_for_context,
 )
-from codesdevs_log_analyzer.models import ParsedLogEntry, LogLevel
+from codesdevs_log_analyzer.utils.time_utils import (
+    extract_timestamp_from_line,
+    format_timestamp,
+    parse_relative_time,
+    parse_timestamp,
+    time_ago,
+)
 
 
 class TestTimeUtils:
@@ -242,7 +241,7 @@ class TestFormatters:
 
     def test_format_as_markdown_entry(self) -> None:
         """Test formatting ParsedLogEntry as markdown."""
-        entry = ParsedLogEntry(
+        _entry = ParsedLogEntry(  # noqa: F841
             line_number=1,
             raw_line="2026-01-15 INFO Test",
             message="Test message",

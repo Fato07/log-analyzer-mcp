@@ -6,18 +6,18 @@ import pytest
 
 from codesdevs_log_analyzer.models import LogFormat
 from codesdevs_log_analyzer.parsers import (
-    get_parser,
+    PARSER_REGISTRY,
+    ApacheAccessParser,
+    DockerParser,
+    GenericParser,
+    JSONLParser,
+    KubernetesParser,
+    SyslogParser,
     detect_format,
     detect_format_from_lines,
-    list_formats,
+    get_parser,
     get_parser_for_format,
-    PARSER_REGISTRY,
-    SyslogParser,
-    ApacheAccessParser,
-    JSONLParser,
-    DockerParser,
-    KubernetesParser,
-    GenericParser,
+    list_formats,
 )
 
 

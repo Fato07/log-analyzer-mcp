@@ -1,13 +1,12 @@
 """Tests for correlator analyzer."""
 
-import pytest
 from datetime import datetime, timedelta
 
 from codesdevs_log_analyzer.analyzers.correlator import (
+    CorrelationResult,
+    CorrelationWindow,
     Correlator,
     StreamingCorrelator,
-    CorrelationWindow,
-    CorrelationResult,
     correlate_events,
 )
 from codesdevs_log_analyzer.parsers.base import ParsedLogEntry

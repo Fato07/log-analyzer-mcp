@@ -1,28 +1,25 @@
 """Integration tests for log analyzer MCP server."""
 
 import json
-import os
-import tempfile
 from datetime import datetime, timedelta
 
 import pytest
 
 from codesdevs_log_analyzer import (
-    mcp,
-    log_analyzer_parse,
-    log_analyzer_search,
-    log_analyzer_extract_errors,
-    log_analyzer_summarize,
-    log_analyzer_tail,
+    PARSER_REGISTRY,
     log_analyzer_correlate,
     log_analyzer_diff,
-    log_analyzer_watch,
-    log_analyzer_suggest_patterns,
-    log_analyzer_trace,
+    log_analyzer_extract_errors,
     log_analyzer_multi,
-    PARSER_REGISTRY,
+    log_analyzer_parse,
+    log_analyzer_search,
+    log_analyzer_suggest_patterns,
+    log_analyzer_summarize,
+    log_analyzer_tail,
+    log_analyzer_trace,
+    log_analyzer_watch,
+    mcp,
 )
-
 
 # =============================================================================
 # Test Fixtures
@@ -325,7 +322,7 @@ class TestLogAnalyzerExtractErrors:
             response_format="json"
         )
 
-        data_no = json.loads(result_no_warnings)
+        _data_no = json.loads(result_no_warnings)  # noqa: F841
         data_with = json.loads(result_with_warnings)
 
         assert data_with["total_warnings"] >= 0
@@ -623,11 +620,11 @@ class TestIntegration:
             pattern="ERROR",
             response_format="json"
         )
-        search_data = json.loads(search_result)
+        _search_data = json.loads(search_result)  # noqa: F841
 
         # 3. Extract errors
         errors_result = log_analyzer_extract_errors(python_log_file, response_format="json")
-        errors_data = json.loads(errors_result)
+        _errors_data = json.loads(errors_result)  # noqa: F841
 
         # 4. Summarize
         summary_result = log_analyzer_summarize(python_log_file, response_format="json")

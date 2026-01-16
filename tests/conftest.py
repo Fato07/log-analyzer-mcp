@@ -2,11 +2,10 @@
 
 import os
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
-
 
 # Get the test_logs directory
 TEST_LOGS_DIR = Path(__file__).parent.parent / "test_logs"
@@ -220,7 +219,8 @@ def sample_log_entries() -> list:
     including database errors that can be grouped.
     """
     from datetime import datetime, timedelta
-    from codesdevs_log_analyzer.models import ParsedLogEntry, LogLevel
+
+    from codesdevs_log_analyzer.models import LogLevel, ParsedLogEntry
 
     base_time = datetime(2024, 1, 15, 10, 0, 0)
 
@@ -324,11 +324,11 @@ def mock_parser():
     Returns a parser that can parse the sample_log_file entries
     and yield ParsedLogEntry objects.
     """
-    from datetime import datetime
-    from typing import Iterator
-    from codesdevs_log_analyzer.models import ParsedLogEntry, LogLevel
-    from codesdevs_log_analyzer.parsers.base import BaseLogParser
     import re
+    from datetime import datetime
+
+    from codesdevs_log_analyzer.models import ParsedLogEntry
+    from codesdevs_log_analyzer.parsers.base import BaseLogParser
 
     class MockParser(BaseLogParser):
         """Simple mock parser for testing."""

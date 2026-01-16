@@ -1,10 +1,6 @@
 """Tests for log_watcher analyzer."""
 
 import os
-import tempfile
-from pathlib import Path
-
-import pytest
 
 from codesdevs_log_analyzer.analyzers.log_watcher import (
     LogWatcher,

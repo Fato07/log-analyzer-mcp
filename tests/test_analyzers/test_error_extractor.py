@@ -1,14 +1,13 @@
 """Tests for error_extractor analyzer."""
 
-import pytest
 from datetime import datetime
 
 from codesdevs_log_analyzer.analyzers.error_extractor import (
+    ErrorExtractionResult,
     ErrorExtractor,
     ErrorGroup,
-    ErrorExtractionResult,
-    normalize_error_message,
     extract_errors,
+    normalize_error_message,
 )
 from codesdevs_log_analyzer.parsers.base import ParsedLogEntry
 

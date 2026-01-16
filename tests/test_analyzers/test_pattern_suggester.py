@@ -1,8 +1,6 @@
 """Tests for pattern_suggester analyzer."""
 
-from pathlib import Path
 
-import pytest
 
 from codesdevs_log_analyzer.analyzers.pattern_suggester import (
     PatternSuggester,
