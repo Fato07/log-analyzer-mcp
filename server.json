@@ -1,0 +1,20 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/@anthropic-ai/mcp-registry-schema/dist/server.schema.json",
+  "name": "io.github.fato07/log-analyzer-mcp",
+  "display_name": "Log Analyzer MCP",
+  "description": "AI-powered log file analysis and debugging - parse, search, extract errors, and correlate events across 9+ log formats",
+  "repository": "https://github.com/Fato07/log-analyzer-mcp",
+  "homepage": "https://github.com/Fato07/log-analyzer-mcp",
+  "license": "MIT",
+  "authors": ["Fato07"],
+  "tags": ["logging", "debugging", "analysis", "parsing", "errors"],
+  "packages": [
+    {
+      "registry_name": "pypi",
+      "name": "codesdevs-log-analyzer",
+      "version": "latest",
+      "runtime": "python",
+      "license": "MIT"
+    }
+  ]
+}

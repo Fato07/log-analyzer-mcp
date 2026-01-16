@@ -81,6 +81,9 @@ follow_untyped_imports = true
 module = ["codesdevs_log_analyzer.utils.time_utils", "codesdevs_log_analyzer.parsers.syslog"]
 disable_error_code = ["no-untyped-call"]
 
+[tool.mcp]
+name = "io.github.fato07/log-analyzer-mcp"
+
 [dependency-groups]
 dev = [
     "types-python-dateutil>=2.9.0.20251115",
