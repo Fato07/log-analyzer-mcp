@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-01-16
+
+### Changed
+
+- **MCP Best Practices Compliance**
+  - Server name changed from `log-analyzer-mcp` to `log_analyzer_mcp` (Python naming convention)
+  - All 14 tools now include `ToolAnnotations` with proper hints:
+    - `readOnlyHint=True` - All tools are read-only operations
+    - `destructiveHint=False` - No tools modify log files
+    - `idempotentHint=True/False` - Properly indicates if results are consistent
+    - `openWorldHint=False` - Tools don't interact with external systems
+  - Enhanced server instructions with comprehensive description
+  - Added `title` property to all tool annotations for better discoverability
+
+### Technical
+
+- Import `ToolAnnotations` from `mcp.types` for proper MCP protocol compliance
+- All 280 tests passing
+- mypy strict mode passing
+- ruff linting passing
+
 ## [0.3.0] - 2026-01-16
 
 ### Added
@@ -136,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory-efficient streaming for large files (100MB+)
 - Sub-10 second processing for 100MB files
 
+[0.3.1]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.3.1
 [0.3.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.3.0
 [0.2.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.2.0
 [0.1.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.1.0

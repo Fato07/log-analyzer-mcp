@@ -1,4 +1,8 @@
-"""FastMCP server for log analysis tools."""
+"""FastMCP server for log analysis tools.
+
+This MCP server provides 14 tools for intelligent log file analysis and debugging
+assistance. All tools follow MCP best practices with proper annotations.
+"""
 
 import json
 import os
@@ -7,6 +11,7 @@ from datetime import datetime
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from codesdevs_log_analyzer.analyzers import (
     Correlator,
@@ -32,10 +37,15 @@ from codesdevs_log_analyzer.utils import (
     stream_file,
 )
 
-# Initialize FastMCP server
+# Initialize FastMCP server with proper naming convention (underscores for Python)
 mcp = FastMCP(
-    "log-analyzer-mcp",
-    instructions="MCP server for intelligent log file analysis and debugging assistance",
+    "log_analyzer_mcp",
+    instructions=(
+        "MCP server for intelligent log file analysis and debugging assistance. "
+        "Provides tools to parse, search, analyze, and debug log files across "
+        "multiple formats including syslog, Apache, Nginx, Docker, Kubernetes, "
+        "Python, Java, and JSON Lines."
+    ),
 )
 
 
@@ -108,7 +118,15 @@ def _entry_to_dict(entry: ParsedLogEntry) -> dict[str, Any]:
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Parse Log File",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_parse(
     file_path: str,
     format_hint: str | None = None,
@@ -240,7 +258,15 @@ def log_analyzer_parse(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Search Log Patterns",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_search(
     file_path: str,
     pattern: str,
@@ -390,7 +416,15 @@ def log_analyzer_search(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Extract Errors from Log",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_extract_errors(
     file_path: str,
     include_warnings: bool = False,
@@ -499,7 +533,15 @@ def log_analyzer_extract_errors(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Summarize Log File",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_summarize(
     file_path: str,
     focus: str = "all",
@@ -672,7 +714,15 @@ def log_analyzer_summarize(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Tail Log File",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_tail(
     file_path: str,
     lines: int = 100,
@@ -762,7 +812,15 @@ def log_analyzer_tail(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Correlate Log Events",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_correlate(
     file_path: str,
     anchor_pattern: str,
@@ -879,7 +937,15 @@ def log_analyzer_correlate(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Compare Log Files",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_diff(
     file_path_a: str,
     file_path_b: str | None = None,
@@ -1050,7 +1116,15 @@ def log_analyzer_diff(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Watch Log File",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=False,  # Returns different results based on file changes
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_watch(
     file_path: str,
     from_position: int = 0,
@@ -1171,7 +1245,15 @@ Use `from_position={result.current_position}` in subsequent calls to get new ent
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Suggest Search Patterns",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_suggest_patterns(
     file_path: str,
     focus: str = "all",
@@ -1304,7 +1386,15 @@ log_analyzer_search(file_path, pattern="<pattern>", is_regex=True)
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Extract Trace IDs",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_trace(
     file_path: str,
     trace_id: str | None = None,
@@ -1430,7 +1520,15 @@ def log_analyzer_trace(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Multi-File Analysis",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_multi(
     file_paths: list[str],
     operation: str = "merge",
@@ -1630,7 +1728,15 @@ def log_analyzer_multi(
         return handle_tool_error(e, file_paths[0] if file_paths else "unknown")
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Ask About Logs",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_ask(
     file_path: str,
     question: str,
@@ -1909,7 +2015,15 @@ def log_analyzer_ask(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Scan Sensitive Data",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_scan_sensitive(
     file_path: str,
     redact: bool = False,
@@ -2052,7 +2166,15 @@ def log_analyzer_scan_sensitive(
 # =============================================================================
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        title="Suggest Log Format",
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True,
+        openWorldHint=False,
+    ),
+)
 def log_analyzer_suggest_format(
     file_path: str,
     sample_size: int = 100,

@@ -116,7 +116,7 @@ class TestServerImport:
     def test_mcp_server_exists(self):
         """Test that MCP server is properly initialized."""
         assert mcp is not None
-        assert mcp.name == "log-analyzer-mcp"
+        assert mcp.name == "log_analyzer_mcp"
 
     def test_all_tools_registered(self):
         """Test that all 14 tools are registered."""

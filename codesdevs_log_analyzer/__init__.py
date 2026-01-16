@@ -17,7 +17,7 @@ This MCP server provides 14 tools for intelligent log file analysis:
 - log_analyzer_suggest_format: Analyze file and suggest best parsing format
 """
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 from codesdevs_log_analyzer.models import (
     Anomaly,
