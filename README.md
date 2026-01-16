@@ -272,4 +272,4 @@ Contributions welcome! Please open an issue or submit a pull request.
 
 ---
 
-Built by [Fato07](https://github.com/Fato07) at [CodesDevs](https://codesdevs.com)
+Built by [Fato07](https://github.com/Fato07) at [CodesDevs](https://codesdevs.io)
