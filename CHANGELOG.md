@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-16
+
+### Added
+
+- **New Tools**
+  - `log_analyzer_trace` - Extract and follow trace/correlation IDs across log entries
+    - Auto-detects trace ID formats (OpenTelemetry, UUID, AWS X-Ray, custom patterns)
+    - Groups entries by trace ID to show complete request flows
+    - Identifies traces containing errors
+    - Calculates trace duration and entry counts
+  - `log_analyzer_multi` - Analyze and correlate logs across multiple files
+    - **Merge**: Interleave entries from multiple files by timestamp
+    - **Correlate**: Find events happening across files within time windows
+    - **Compare**: Diff error patterns and statistics between files
+  - `log_analyzer_ask` - Natural language query translation
+    - Translates questions like "what errors happened today?" into tool calls
+    - Detects query intent (search, count, analyze, find_cause, compare)
+    - Identifies focus area (errors, security, performance, network)
+    - Extracts time references ("last hour", "today", "yesterday")
+    - Generates follow-up suggestions
+  - `log_analyzer_scan_sensitive` - Sensitive data detection for security auditing
+    - **PII Detection**: Emails, credit cards (Visa/MC/Amex), SSNs, phone numbers
+    - **Credential Detection**: API keys, JWT tokens, AWS keys, Bearer tokens
+    - **Secret Detection**: Passwords in URLs, private keys, database connection strings
+    - Severity categorization (high/medium/low)
+    - Optional redaction mode
+  - `log_analyzer_suggest_format` - Suggest log format based on content analysis
+
+- **New Analyzers**
+  - `TraceExtractor` class for trace ID extraction and correlation
+  - `MultiFileAnalyzer` class for multi-file operations
+  - `QueryTranslator` class for natural language query translation
+  - `SensitiveDataDetector` class for PII and credential detection
+  - `RecommendationEngine` class for actionable recommendations
+
+### Enhanced
+
+- **Summarizer Enhancements**
+  - Security analysis section: Failed auth attempts, brute force indicators, SQL injection attempts, XSS attempts, suspicious user agents
+  - Performance metrics section with timing and throughput analysis
+
+### Changed
+
+- Total tools increased from 9 to 14
+- Test suite remains at 280 tests (all passing)
+- Updated documentation with new tool examples and parameters
+
 ## [0.2.0] - 2026-01-16
 
 ### Added
@@ -89,5 +136,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory-efficient streaming for large files (100MB+)
 - Sub-10 second processing for 100MB files
 
+[0.3.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.3.0
 [0.2.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.2.0
 [0.1.0]: https://github.com/codesdevs/log-analyzer-mcp/releases/tag/v0.1.0

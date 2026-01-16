@@ -18,6 +18,8 @@ from codesdevs_log_analyzer import (
     log_analyzer_diff,
     log_analyzer_watch,
     log_analyzer_suggest_patterns,
+    log_analyzer_trace,
+    log_analyzer_multi,
     PARSER_REGISTRY,
 )
 
@@ -117,9 +119,9 @@ class TestServerImport:
         assert mcp.name == "log-analyzer-mcp"
 
     def test_all_tools_registered(self):
-        """Test that all 9 tools are registered."""
+        """Test that all 14 tools are registered."""
         tools = mcp._tool_manager._tools
-        assert len(tools) == 9, f"Expected 9 tools, got {len(tools)}"
+        assert len(tools) == 14, f"Expected 14 tools, got {len(tools)}"
 
     def test_tool_functions_callable(self):
         """Test that all tool functions are callable."""
@@ -133,6 +135,8 @@ class TestServerImport:
             log_analyzer_diff,
             log_analyzer_watch,
             log_analyzer_suggest_patterns,
+            log_analyzer_trace,
+            log_analyzer_multi,
         ]
         for tool in tools:
             assert callable(tool), f"{tool.__name__} is not callable"

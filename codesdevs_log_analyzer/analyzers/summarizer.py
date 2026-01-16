@@ -51,6 +51,14 @@ class SecurityIndicators:
     error_4xx_count: int = 0
     error_5xx_count: int = 0
     paths_with_most_errors: dict[str, int] = field(default_factory=dict)
+    # Enhanced security indicators
+    brute_force_indicators: list[dict[str, Any]] = field(default_factory=list)
+    sql_injection_attempts: int = 0
+    path_traversal_attempts: int = 0
+    xss_attempts: int = 0
+    suspicious_user_agents: list[str] = field(default_factory=list)
+    privilege_escalation_indicators: int = 0
+    security_summary: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -62,6 +70,13 @@ class SecurityIndicators:
             "paths_with_most_errors": dict(
                 sorted(self.paths_with_most_errors.items(), key=lambda x: x[1], reverse=True)[:10]
             ),
+            "brute_force_indicators": self.brute_force_indicators[:5],
+            "sql_injection_attempts": self.sql_injection_attempts,
+            "path_traversal_attempts": self.path_traversal_attempts,
+            "xss_attempts": self.xss_attempts,
+            "suspicious_user_agents": self.suspicious_user_agents[:10],
+            "privilege_escalation_indicators": self.privilege_escalation_indicators,
+            "security_summary": self.security_summary,
         }
 
 
@@ -138,6 +153,92 @@ class Summarizer:
         "403",
     ]
 
+    # SQL injection patterns
+    SQL_INJECTION_PATTERNS = [
+        "union select",
+        "' or '1'='1",
+        "' or 1=1",
+        "'; drop",
+        "1'; drop",
+        "--",
+        "/**/",
+        "exec(",
+        "xp_cmdshell",
+        "information_schema",
+        "select * from",
+        "insert into",
+        "delete from",
+        "update set",
+        "char(0x",
+        "benchmark(",
+        "sleep(",
+        "waitfor delay",
+    ]
+
+    # Path traversal patterns
+    PATH_TRAVERSAL_PATTERNS = [
+        "../",
+        "..\\",
+        "%2e%2e%2f",
+        "%2e%2e/",
+        "..%2f",
+        "%2e%2e\\",
+        "..%5c",
+        "/etc/passwd",
+        "/etc/shadow",
+        "c:\\windows",
+        "boot.ini",
+    ]
+
+    # XSS patterns
+    XSS_PATTERNS = [
+        "<script",
+        "javascript:",
+        "onerror=",
+        "onload=",
+        "onclick=",
+        "onmouseover=",
+        "eval(",
+        "document.cookie",
+        "document.write",
+        "alert(",
+        "String.fromCharCode",
+        "<iframe",
+        "<svg",
+        "&#x",
+    ]
+
+    # Suspicious user agents
+    SUSPICIOUS_USER_AGENTS = [
+        "sqlmap",
+        "nikto",
+        "nessus",
+        "dirbuster",
+        "gobuster",
+        "wpscan",
+        "burpsuite",
+        "nmap",
+        "masscan",
+        "zap",
+        "acunetix",
+        "havij",
+        "python-requests",  # Not always suspicious but often used in scripts
+    ]
+
+    # Privilege escalation patterns
+    PRIVILEGE_ESCALATION_PATTERNS = [
+        "sudo",
+        "su -",
+        "privilege",
+        "escalat",
+        "root access",
+        "admin access",
+        "elevated",
+        "impersonat",
+        "setuid",
+        "capability",
+    ]
+
     def __init__(
         self,
         file_path: str | Path,
@@ -181,6 +282,14 @@ class Summarizer:
         self._status_codes: Counter[int] = Counter()
         self._path_errors: Counter[str] = Counter()
 
+        # Enhanced security tracking
+        self._sql_injection_count = 0
+        self._path_traversal_count = 0
+        self._xss_count = 0
+        self._privilege_escalation_count = 0
+        self._suspicious_user_agents: list[str] = []
+        self._ip_auth_failures: Counter[str] = Counter()  # IP -> auth failure count
+
         # Anomaly detection
         self._entries_per_minute: Counter[str] = Counter()  # minute bucket -> count
         self._last_timestamp: datetime | None = None
@@ -197,6 +306,31 @@ class Summarizer:
         """Check if message indicates an auth failure."""
         message_lower = message.lower()
         return any(pattern in message_lower for pattern in self.AUTH_FAILURE_PATTERNS)
+
+    def _check_sql_injection(self, text: str) -> bool:
+        """Check if text contains SQL injection patterns."""
+        text_lower = text.lower()
+        return any(pattern in text_lower for pattern in self.SQL_INJECTION_PATTERNS)
+
+    def _check_path_traversal(self, text: str) -> bool:
+        """Check if text contains path traversal patterns."""
+        text_lower = text.lower()
+        return any(pattern in text_lower for pattern in self.PATH_TRAVERSAL_PATTERNS)
+
+    def _check_xss(self, text: str) -> bool:
+        """Check if text contains XSS patterns."""
+        text_lower = text.lower()
+        return any(pattern in text_lower for pattern in self.XSS_PATTERNS)
+
+    def _check_privilege_escalation(self, text: str) -> bool:
+        """Check if text contains privilege escalation patterns."""
+        text_lower = text.lower()
+        return any(pattern in text_lower for pattern in self.PRIVILEGE_ESCALATION_PATTERNS)
+
+    def _check_suspicious_user_agent(self, user_agent: str) -> bool:
+        """Check if user agent is suspicious."""
+        ua_lower = user_agent.lower()
+        return any(pattern in ua_lower for pattern in self.SUSPICIOUS_USER_AGENTS)
 
     def _get_minute_bucket(self, timestamp: datetime) -> str:
         """Get minute bucket key for timestamp."""
@@ -244,13 +378,43 @@ class Summarizer:
         # Security metrics
         if self.include_security:
             # Check for auth failures
+            client_ip = metadata.get("client_ip") or metadata.get("ip")
             if self._check_auth_failure(entry.message):
                 self._auth_failures += 1
+                # Track auth failures per IP for brute force detection
+                if client_ip:
+                    self._ip_auth_failures[str(client_ip)] += 1
 
             # Track IP addresses
-            client_ip = metadata.get("client_ip") or metadata.get("ip")
             if client_ip:
                 self._ip_counter[str(client_ip)] += 1
+
+            # Check for attack patterns in message and request data
+            combined_text = entry.message
+            path = metadata.get("path") or metadata.get("url") or metadata.get("request") or ""
+            if path:
+                combined_text = f"{combined_text} {path}"
+
+            # Check for SQL injection attempts
+            if self._check_sql_injection(combined_text):
+                self._sql_injection_count += 1
+
+            # Check for path traversal attempts
+            if self._check_path_traversal(combined_text):
+                self._path_traversal_count += 1
+
+            # Check for XSS attempts
+            if self._check_xss(combined_text):
+                self._xss_count += 1
+
+            # Check for privilege escalation indicators
+            if self._check_privilege_escalation(entry.message):
+                self._privilege_escalation_count += 1
+
+            # Check user agent for suspicious patterns
+            user_agent = metadata.get("user_agent") or metadata.get("http_user_agent") or ""
+            if user_agent and self._check_suspicious_user_agent(user_agent) and user_agent not in self._suspicious_user_agents:
+                self._suspicious_user_agents.append(user_agent)
 
             # Track status codes (for web logs)
             status = metadata.get("status_code") or metadata.get("status")
@@ -261,8 +425,8 @@ class Summarizer:
 
                     # Track paths with errors
                     if status_int >= 400:
-                        path = metadata.get("path") or metadata.get("url") or "unknown"
-                        self._path_errors[str(path)] += 1
+                        error_path = metadata.get("path") or metadata.get("url") or "unknown"
+                        self._path_errors[str(error_path)] += 1
                 except (ValueError, TypeError):
                     pass
 
@@ -431,7 +595,60 @@ class Summarizer:
         # Paths with most errors
         indicators.paths_with_most_errors = dict(self._path_errors.most_common(10))
 
+        # Enhanced security indicators
+        indicators.sql_injection_attempts = self._sql_injection_count
+        indicators.path_traversal_attempts = self._path_traversal_count
+        indicators.xss_attempts = self._xss_count
+        indicators.privilege_escalation_indicators = self._privilege_escalation_count
+        indicators.suspicious_user_agents = self._suspicious_user_agents[:10]
+
+        # Build brute force indicators from IP auth failures
+        brute_force_threshold = 5  # 5+ auth failures from same IP
+        brute_force_ips = [
+            {"ip": ip, "attempts": count}
+            for ip, count in self._ip_auth_failures.most_common(10)
+            if count >= brute_force_threshold
+        ]
+        indicators.brute_force_indicators = brute_force_ips
+
+        # Generate security summary
+        indicators.security_summary = self._generate_security_summary(indicators)
+
         return indicators
+
+    def _generate_security_summary(self, indicators: SecurityIndicators) -> str:
+        """Generate a summary of security findings."""
+        issues: list[str] = []
+
+        if indicators.failed_auth_attempts > 10:
+            issues.append(f"{indicators.failed_auth_attempts} auth failures")
+
+        if indicators.brute_force_indicators:
+            issues.append(
+                f"{len(indicators.brute_force_indicators)} potential brute force sources"
+            )
+
+        if indicators.sql_injection_attempts > 0:
+            issues.append(f"{indicators.sql_injection_attempts} SQL injection attempts")
+
+        if indicators.path_traversal_attempts > 0:
+            issues.append(f"{indicators.path_traversal_attempts} path traversal attempts")
+
+        if indicators.xss_attempts > 0:
+            issues.append(f"{indicators.xss_attempts} XSS attempts")
+
+        if indicators.suspicious_user_agents:
+            issues.append(f"{len(indicators.suspicious_user_agents)} suspicious user agents")
+
+        if indicators.privilege_escalation_indicators > 0:
+            issues.append(
+                f"{indicators.privilege_escalation_indicators} privilege escalation indicators"
+            )
+
+        if not issues:
+            return "No significant security issues detected"
+
+        return f"Security concerns: {', '.join(issues)}"
 
     def finalize(self) -> LogSummary:
         """

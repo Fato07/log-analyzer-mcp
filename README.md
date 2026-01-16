@@ -15,6 +15,10 @@ An MCP (Model Context Protocol) server for AI-powered log analysis. Parse, searc
 - **Correlation** — Finds related events around error occurrences
 - **Real-time Watching** — Monitor logs for new entries with position tracking
 - **Pattern Suggestions** — AI-powered pattern discovery for debugging
+- **Trace Extraction** — Extract and follow trace/correlation IDs across distributed systems
+- **Multi-File Analysis** — Merge, correlate, and compare logs across multiple files
+- **Natural Language Queries** — Ask questions about logs in plain English
+- **Sensitive Data Detection** — Scan for PII, credentials, and secrets in logs
 - **Streaming** — Handles large files (1GB+) without loading into memory
 - **Multiple Formats** — Markdown and JSON output
 
@@ -122,6 +126,11 @@ What happened in the 60 seconds before each OutOfMemoryError in my Java logs?
 | `log_analyzer_diff` | Compare log files or time periods |
 | `log_analyzer_watch` | Watch log file for new entries (polling-based) |
 | `log_analyzer_suggest_patterns` | Suggest useful search patterns based on log content |
+| `log_analyzer_trace` | Extract and follow trace/correlation IDs across log entries |
+| `log_analyzer_multi` | Analyze and correlate logs across multiple files |
+| `log_analyzer_ask` | Translate natural language questions into tool calls |
+| `log_analyzer_scan_sensitive` | Detect PII, credentials, and secrets in logs |
+| `log_analyzer_suggest_format` | Suggest log format based on content analysis |
 
 ## Examples
 
@@ -326,6 +335,76 @@ Analyze a log file and suggest useful search patterns based on content analysis.
 - `security` — Focus on auth failures, unauthorized access
 - `performance` — Focus on slow requests, timeouts
 - `identifiers` — Focus on UUIDs, request IDs, user IDs
+
+### log_analyzer_trace
+
+Extract and follow trace/correlation IDs across log entries.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | required | Path to log file |
+| `trace_id` | string | null | Specific trace ID to extract (null = all traces) |
+| `trace_patterns` | list | auto | Custom regex patterns for trace IDs |
+| `max_traces` | int | 50 | Maximum traces to return |
+| `max_lines` | int | 100000 | Lines to scan |
+
+**Auto-detected formats:** OpenTelemetry, UUID, AWS X-Ray, custom patterns.
+
+### log_analyzer_multi
+
+Analyze and correlate logs across multiple files.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_paths` | list | required | List of log file paths |
+| `operation` | string | merge | `merge`, `correlate`, or `compare` |
+| `time_window_seconds` | int | 60 | Time window for correlation |
+| `max_entries` | int | 1000 | Maximum entries to return |
+
+**Operations:**
+- `merge` — Interleave entries by timestamp
+- `correlate` — Find events across files within time window
+- `compare` — Diff error patterns between files
+
+### log_analyzer_ask
+
+Translate natural language questions into tool calls.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | required | Path to log file |
+| `question` | string | required | Natural language question about the logs |
+
+**Example Questions:**
+- "What errors happened in the last hour?"
+- "Show me failed login attempts"
+- "What's causing the high latency?"
+
+### log_analyzer_scan_sensitive
+
+Scan for PII, credentials, and sensitive data in logs.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | required | Path to log file |
+| `redact` | bool | false | Redact sensitive data in output |
+| `categories` | list | all | Filter: `email`, `credit_card`, `api_key`, `password`, `ssn`, `ip_address`, `phone`, `token`, `connection_string`, `private_key` |
+| `max_matches` | int | 100 | Maximum matches to return |
+| `max_lines` | int | 100000 | Lines to scan |
+
+**Detects:**
+- **PII:** Emails, credit cards, SSNs, phone numbers
+- **Credentials:** API keys, JWT tokens, AWS keys, Bearer tokens
+- **Secrets:** Passwords in URLs, private keys, database connection strings
+
+### log_analyzer_suggest_format
+
+Suggest log format based on content analysis.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_path` | string | required | Path to log file |
+| `sample_lines` | int | 100 | Lines to sample |
 
 ## Development
 

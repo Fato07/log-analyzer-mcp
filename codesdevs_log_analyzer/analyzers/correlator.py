@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from ..parsers.base import BaseLogParser, ParsedLogEntry
+from .recommendation_engine import CausalChain, RecommendationEngine
 
 # Output limits
 MAX_ANCHORS = 10
@@ -24,10 +25,11 @@ class CorrelationWindow:
     events_after: list[ParsedLogEntry] = field(default_factory=list)
     related_errors: list[ParsedLogEntry] = field(default_factory=list)
     unique_sources: list[str] = field(default_factory=list)
+    causal_chain: CausalChain | None = None  # Causal chain analysis
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result: dict[str, Any] = {
             "anchor": {
                 "line_number": self.anchor_entry.line_number,
                 "timestamp": self.anchor_entry.timestamp.isoformat()
@@ -71,6 +73,12 @@ class CorrelationWindow:
             },
         }
 
+        # Add causal chain if present
+        if self.causal_chain:
+            result["causal_analysis"] = self.causal_chain.to_dict()
+
+        return result
+
 
 @dataclass
 class CorrelationResult:
@@ -81,10 +89,14 @@ class CorrelationResult:
     windows: list[CorrelationWindow] = field(default_factory=list)
     common_precursors: list[str] = field(default_factory=list)
     truncated: bool = False
+    # Causal analysis aggregates
+    recommendations: list[str] = field(default_factory=list)
+    root_cause_summary: str | None = None
+    causal_chain_detected: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        return {
+        result: dict[str, Any] = {
             "anchor_pattern": self.anchor_pattern,
             "total_anchors": self.total_anchors,
             "windows": [w.to_dict() for w in self.windows],
@@ -92,13 +104,32 @@ class CorrelationResult:
             "truncated": self.truncated,
         }
 
+        # Add causal analysis summary if detected
+        if self.causal_chain_detected:
+            result["causal_analysis_summary"] = {
+                "root_cause_summary": self.root_cause_summary,
+                "recommendations": self.recommendations,
+                "chains_detected": sum(
+                    1 for w in self.windows if w.causal_chain is not None
+                ),
+            }
+
+        return result
+
 
 class Correlator:
     """
     Event correlator that finds events around anchor points.
+
     Two-pass algorithm:
     1. First pass: Find all anchor points
     2. Second pass: Collect events in time windows around anchors
+
+    Features:
+    - Pattern-based anchor detection
+    - Time-window correlation
+    - Causal chain detection (optional)
+    - Actionable recommendations
     """
 
     # Error levels for related error detection
@@ -112,6 +143,8 @@ class Correlator:
         max_anchors: int = MAX_ANCHORS,
         regex: bool = True,
         case_sensitive: bool = False,
+        detect_causal_chain: bool = True,
+        include_recommendations: bool = True,
     ):
         """
         Initialize correlator.
@@ -123,6 +156,8 @@ class Correlator:
             max_anchors: Maximum anchor events to analyze
             regex: Treat pattern as regex
             case_sensitive: Case-sensitive pattern matching
+            detect_causal_chain: Enable causal chain detection
+            include_recommendations: Include actionable recommendations
         """
         self.anchor_pattern_str = anchor_pattern
         self.window_before = timedelta(seconds=window_before)
@@ -130,6 +165,13 @@ class Correlator:
         self.max_anchors = min(max_anchors, MAX_ANCHORS)
         self.regex = regex
         self.case_sensitive = case_sensitive
+        self.detect_causal_chain = detect_causal_chain
+        self.include_recommendations = include_recommendations
+
+        # Initialize recommendation engine if needed
+        self._recommendation_engine: RecommendationEngine | None = None
+        if detect_causal_chain or include_recommendations:
+            self._recommendation_engine = RecommendationEngine()
 
         # Compile pattern
         flags = 0 if case_sensitive else re.IGNORECASE
@@ -245,6 +287,13 @@ class Correlator:
 
         window.unique_sources = list(sources)
 
+        # Build causal chain if enabled
+        if self.detect_causal_chain and self._recommendation_engine:
+            window.causal_chain = self._recommendation_engine.build_causal_chain(
+                anchor=anchor,
+                events_before=window.events_before,
+            )
+
         return window
 
     def _find_common_precursors(self, windows: list[CorrelationWindow]) -> list[str]:
@@ -282,12 +331,38 @@ class Correlator:
         # Find common precursors
         common_precursors = self._find_common_precursors(windows)
 
+        # Aggregate causal chain results
+        recommendations: list[str] = []
+        root_cause_hypotheses: list[str] = []
+        causal_chain_detected = False
+
+        for window in windows:
+            if window.causal_chain:
+                causal_chain_detected = True
+                if window.causal_chain.root_cause_hypothesis:
+                    root_cause_hypotheses.append(window.causal_chain.root_cause_hypothesis)
+                for rec in window.causal_chain.recommendations:
+                    if rec not in recommendations:
+                        recommendations.append(rec)
+
+        # Generate root cause summary
+        root_cause_summary: str | None = None
+        if root_cause_hypotheses:
+            # Count unique hypotheses and pick most common
+            hypothesis_counts: Counter[str] = Counter(root_cause_hypotheses)
+            most_common = hypothesis_counts.most_common(1)
+            if most_common:
+                root_cause_summary = most_common[0][0]
+
         return CorrelationResult(
             anchor_pattern=self.anchor_pattern_str,
             total_anchors=self._total_anchors,
             windows=windows,
             common_precursors=common_precursors,
             truncated=self._total_anchors > len(windows),
+            recommendations=recommendations[:10],  # Limit to top 10
+            root_cause_summary=root_cause_summary,
+            causal_chain_detected=causal_chain_detected,
         )
 
     def correlate_file(
@@ -524,6 +599,8 @@ def correlate_events(
     case_sensitive: bool = False,
     max_lines: int = 10000,
     streaming: bool = False,
+    detect_causal_chain: bool = True,
+    include_recommendations: bool = True,
 ) -> CorrelationResult:
     """
     Convenience function to correlate events in a log file.
@@ -539,11 +616,14 @@ def correlate_events(
         case_sensitive: Case-sensitive pattern matching
         max_lines: Maximum lines to process
         streaming: Use memory-efficient streaming mode
+        detect_causal_chain: Enable causal chain detection
+        include_recommendations: Include actionable recommendations
 
     Returns:
         CorrelationResult with all correlation windows
     """
     if streaming:
+        # StreamingCorrelator doesn't support causal chains (yet)
         correlator: Correlator | StreamingCorrelator = StreamingCorrelator(
             anchor_pattern=anchor_pattern,
             window_before=window_before,
@@ -560,6 +640,8 @@ def correlate_events(
             max_anchors=max_anchors,
             regex=regex,
             case_sensitive=case_sensitive,
+            detect_causal_chain=detect_causal_chain,
+            include_recommendations=include_recommendations,
         )
 
     return correlator.correlate_file(parser, file_path, max_lines=max_lines)
