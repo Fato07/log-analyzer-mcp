@@ -1,6 +1,6 @@
 [project]
 name = "codesdevs-log-analyzer"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for intelligent log file analysis and debugging assistance"
 readme = "README.md"
 license = { text = "MIT" }
@@ -39,7 +39,7 @@ dev = [
 ]
 
 [project.scripts]
-codesdevs-log-analyzer = "codesdevs_log_analyzer.server:main"
+codesdevs-log-analyzer = "codesdevs_log_analyzer.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/Fato07/log-analyzer-mcp"

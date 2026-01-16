@@ -32,17 +32,32 @@ An MCP (Model Context Protocol) server for AI-powered log analysis. Parse, searc
 
 ## Installation
 
-### pip
+### Quick Install (Recommended)
+
+```bash
+uvx codesdevs-log-analyzer install
+```
+
+This automatically adds the MCP server to your Claude Code settings. Restart Claude Code to start using it.
+
+To uninstall:
+```bash
+uvx codesdevs-log-analyzer uninstall
+```
+
+### Manual Installation
+
+#### pip
 ```bash
 pip install codesdevs-log-analyzer
 ```
 
-### uv
+#### uv
 ```bash
 uv tool install codesdevs-log-analyzer
 ```
 
-### Claude Code
+#### Claude Code
 
 Add to your `~/.claude/settings.json`:
 
