@@ -1,13 +1,20 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.github.fato07/log-analyzer-mcp",
-  "description": "AI-powered log file analysis and debugging - parse, search, extract errors, and correlate events across 9+ log formats",
-  "version": "0.4.0",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Fato07/log-analyzer-mcp",
+  "description": "AI-powered log analysis - parse, search, extract errors across 9+ formats",
+  "repository": {
+    "url": "https://github.com/Fato07/log-analyzer-mcp",
+    "source": "github"
+  },
+  "version": "0.4.1",
   "packages": [
     {
-      "registry_type": "pypi",
+      "registryType": "pypi",
       "identifier": "codesdevs-log-analyzer",
-      "version": "0.4.0"
+      "version": "0.4.1",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
