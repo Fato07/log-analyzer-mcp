@@ -1,0 +1,15 @@
+2026-01-15 10:30:00,123 - myapp.main - INFO - Application starting
+2026-01-15 10:30:01,456 - myapp.config - DEBUG - Loading config from /etc/myapp/config.yaml
+2026-01-15 10:30:02,789 - myapp.database - INFO - Connected to database
+2026-01-15 10:30:03,012 - myapp.api - WARNING - Rate limit approaching for user 42
+2026-01-15 10:30:04,345 - myapp.worker - ERROR - Task failed: Connection refused
+Traceback (most recent call last):
+  File "/app/worker.py", line 45, in process_task
+    result = self.client.call(task)
+  File "/app/client.py", line 123, in call
+    response = self.session.post(url, data=data)
+ConnectionError: Connection refused
+2026-01-15 10:30:05,678 - myapp.main - INFO - Processing complete
+ERROR:myapp.critical:Critical system error occurred
+[2026-01-15 10:30:06] ERROR myapp.handler: Request handler exception
+DEBUG:myapp.trace:Detailed trace information

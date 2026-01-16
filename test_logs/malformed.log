@@ -1,0 +1,12 @@
+This is a line with no timestamp or level
+
+Another line with just text
+2026-01-15 incomplete line
+[Broken bracket entry
+{"incomplete": "json
+Normal line mixed with garbage: @#$%^&*
+2026-13-45 99:99:99 Invalid timestamp
+Jan 32 25:61:99 Invalid syslog timestamp
+Ün1cödé çhàrâctérs in log entry
+Very long line that exceeds normal limits Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum end of line
+2026-01-15 10:30:00 Valid entry after malformed ones

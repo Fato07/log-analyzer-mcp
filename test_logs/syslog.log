@@ -1,0 +1,12 @@
+Jan 15 10:30:00 myhost sshd[1234]: Accepted password for user from 192.168.1.100 port 22
+Jan 15 10:30:01 myhost sshd[1234]: pam_unix(sshd:session): session opened for user
+Jan 15 10:30:05 myhost kernel: [12345.678901] eth0: link up
+Jan 15 10:30:10 myhost cron[5678]: (root) CMD (/usr/local/bin/backup.sh)
+Jan 15 10:30:15 myhost systemd[1]: Started Daily apt download activities.
+Jan 15 10:30:20 myhost nginx[9012]: error while loading shared libraries
+Jan 15 10:30:25 myhost sshd[1234]: Received disconnect from 192.168.1.100 port 22
+Jan 15 10:30:30 myhost kernel: [12350.123456] Out of memory: Kill process 1234
+Jan 15 10:30:35 myhost systemd[1]: Stopping User Manager for UID 1000...
+Feb  3 08:15:30 server kernel: [98765.432109] Network device up
+Feb  3 08:15:35 server sshd[4321]: Failed password for invalid user admin from 10.0.0.1 port 22 ssh2
+Feb  3 08:15:40 server sshd[4321]: warning: Authentication failed for admin

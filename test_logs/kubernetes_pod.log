@@ -1,0 +1,10 @@
+2026-01-15T10:30:00.123Z level=info msg="Pod starting" pod=myapp-abc123 namespace=production
+2026-01-15T10:30:01.234Z level=debug msg="Loading secrets" secret_count=3
+2026-01-15T10:30:02.345Z level=info msg="Health check passed" endpoint=/healthz status=200
+2026-01-15T10:30:03.456Z level=warn msg="High CPU usage" cpu_percent=85 threshold=80
+2026-01-15T10:30:04.567Z level=error msg="Failed to connect to service" service=redis error="connection refused"
+I0115 10:30:05.678901 12345 controller.go:123] Starting controller
+W0115 10:30:06.789012 12345 cache.go:456] Cache synchronization slow
+E0115 10:30:07.890123 12345 handler.go:789] Error processing request: timeout
+{"ts":"2026-01-15T10:30:08.901Z","level":"info","msg":"Request completed","method":"GET","path":"/api/users","status":200}
+{"ts":"2026-01-15T10:30:09.012Z","level":"error","msg":"Database query failed","error":"deadlock detected","query":"UPDATE users SET..."}

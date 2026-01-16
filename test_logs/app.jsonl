@@ -1,0 +1,9 @@
+{"timestamp":"2026-01-15T10:30:00.123Z","level":"info","message":"Application started","version":"1.0.0","env":"production"}
+{"timestamp":"2026-01-15T10:30:01.456Z","level":"debug","message":"Loading configuration","config_file":"/etc/app/config.yaml"}
+{"timestamp":"2026-01-15T10:30:02.789Z","level":"info","message":"Database connected","host":"db.example.com","port":5432}
+{"timestamp":"2026-01-15T10:30:03.012Z","level":"warn","message":"Slow query detected","query":"SELECT * FROM users","duration_ms":1523}
+{"timestamp":"2026-01-15T10:30:04.345Z","level":"error","message":"Failed to process request","error":"Connection timeout","request_id":"abc-123"}
+{"timestamp":"2026-01-15T10:30:05.678Z","level":"info","message":"User logged in","user_id":42,"ip":"192.168.1.100"}
+{"ts":1736934606000,"level":"error","msg":"Cache miss","key":"user:42:profile"}
+{"time":"2026-01-15T10:30:07Z","severity":"INFO","text":"Health check passed","checks":{"db":true,"cache":true}}
+{"@timestamp":"2026-01-15T10:30:08.000Z","log_level":"WARN","body":"Memory usage high","percent":85}

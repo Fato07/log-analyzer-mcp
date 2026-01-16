@@ -1,0 +1,14 @@
+2026-01-15 10:30:00,123 INFO  [main] com.example.Application - Starting application
+2026-01-15 10:30:01,456 DEBUG [main] com.example.config.ConfigLoader - Loading configuration
+2026-01-15 10:30:02,789 INFO  [pool-1-thread-1] com.example.service.UserService - User authenticated: user@example.com
+2026-01-15 10:30:03,012 WARN  [pool-1-thread-2] com.example.cache.CacheManager - Cache miss for key: user:123
+2026-01-15 10:30:04,345 ERROR [http-nio-8080-exec-1] com.example.api.RestController - Request processing failed
+java.lang.NullPointerException: Cannot invoke method on null object
+	at com.example.service.DataService.process(DataService.java:45)
+	at com.example.api.RestController.handleRequest(RestController.java:123)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+Caused by: java.sql.SQLException: Connection pool exhausted
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:155)
+	... 10 more
+2026-01-15 10:30:05,678 INFO  [main] com.example.Application - Shutdown complete
+2026-01-15 10:30:06.789 [worker-1] ERROR c.e.Worker - Worker task failed
