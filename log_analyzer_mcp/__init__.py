@@ -1,3 +1,69 @@
-"""Log Analyzer MCP Server - Intelligent log file analysis for AI assistants."""
+"""Log Analyzer MCP Server - Analyze and debug log files.
+
+This MCP server provides 7 tools for intelligent log file analysis:
+- log_analyzer_parse: Parse and detect log format
+- log_analyzer_search: Search patterns with context
+- log_analyzer_extract_errors: Extract errors with stack traces
+- log_analyzer_summarize: Generate debugging summary
+- log_analyzer_tail: Get recent log entries
+- log_analyzer_correlate: Correlate events in time windows
+- log_analyzer_diff: Compare log files or time periods
+"""
 
 __version__ = "0.1.0"
+
+from log_analyzer_mcp.server import (
+    mcp,
+    main,
+    log_analyzer_parse,
+    log_analyzer_search,
+    log_analyzer_extract_errors,
+    log_analyzer_summarize,
+    log_analyzer_tail,
+    log_analyzer_correlate,
+    log_analyzer_diff,
+)
+
+from log_analyzer_mcp.models import (
+    LogFormat,
+    ResponseFormat,
+    LogLevel,
+    ParsedLogEntry,
+    FileInfo,
+    TimeRange,
+    Anomaly,
+)
+
+from log_analyzer_mcp.parsers import (
+    detect_format,
+    get_parser,
+    PARSER_REGISTRY,
+)
+
+__all__ = [
+    # Version
+    "__version__",
+    # Server
+    "mcp",
+    "main",
+    # Tools
+    "log_analyzer_parse",
+    "log_analyzer_search",
+    "log_analyzer_extract_errors",
+    "log_analyzer_summarize",
+    "log_analyzer_tail",
+    "log_analyzer_correlate",
+    "log_analyzer_diff",
+    # Models
+    "LogFormat",
+    "ResponseFormat",
+    "LogLevel",
+    "ParsedLogEntry",
+    "FileInfo",
+    "TimeRange",
+    "Anomaly",
+    # Parser functions
+    "detect_format",
+    "get_parser",
+    "PARSER_REGISTRY",
+]

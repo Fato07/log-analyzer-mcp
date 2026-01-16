@@ -72,6 +72,45 @@ class LogLevel(str, Enum):
 
 
 # ============================================================================
+# Helper Models
+# ============================================================================
+
+
+class FileInfo(BaseModel):
+    """Information about a log file."""
+
+    path: str = Field(..., description="File path")
+    size_bytes: int = Field(..., description="File size in bytes")
+    total_lines: int = Field(..., description="Total number of lines")
+    detected_format: LogFormat = Field(..., description="Detected log format")
+    encoding: str = Field(default="utf-8", description="File encoding")
+
+
+class TimeRange(BaseModel):
+    """A time range."""
+
+    start: datetime | None = Field(None, description="Start of time range")
+    end: datetime | None = Field(None, description="End of time range")
+
+    @property
+    def duration_seconds(self) -> float | None:
+        """Get duration in seconds."""
+        if self.start and self.end:
+            return (self.end - self.start).total_seconds()
+        return None
+
+
+class Anomaly(BaseModel):
+    """A detected anomaly in log data."""
+
+    type: str = Field(..., description="Type of anomaly (spike, gap, unusual_level)")
+    description: str = Field(..., description="Human-readable description")
+    severity: str = Field(default="medium", description="Severity: low, medium, high")
+    timestamp: datetime | None = Field(None, description="When the anomaly occurred")
+    details: dict[str, Any] = Field(default_factory=dict, description="Additional details")
+
+
+# ============================================================================
 # Parsed Log Entry Model
 # ============================================================================
 
