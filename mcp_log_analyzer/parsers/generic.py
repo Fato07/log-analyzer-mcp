@@ -3,9 +3,9 @@
 import re
 from typing import ClassVar
 
-from log_analyzer_mcp.models import LogLevel, ParsedLogEntry
-from log_analyzer_mcp.parsers.base import BaseLogParser
-from log_analyzer_mcp.utils.time_utils import extract_timestamp_from_line
+from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
+from mcp_log_analyzer.parsers.base import BaseLogParser
+from mcp_log_analyzer.utils.time_utils import extract_timestamp_from_line
 
 
 class GenericParser(BaseLogParser):

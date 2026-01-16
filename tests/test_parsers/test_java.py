@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from log_analyzer_mcp.models import LogLevel
-from log_analyzer_mcp.parsers.java import JavaLogParser
+from mcp_log_analyzer.models import LogLevel
+from mcp_log_analyzer.parsers.java import JavaLogParser
 
 
 class TestJavaLogParser:

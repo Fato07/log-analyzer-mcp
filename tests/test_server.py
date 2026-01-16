@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from log_analyzer_mcp import (
+from mcp_log_analyzer import (
     mcp,
     log_analyzer_parse,
     log_analyzer_search,

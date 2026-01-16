@@ -220,7 +220,7 @@ def sample_log_entries() -> list:
     including database errors that can be grouped.
     """
     from datetime import datetime, timedelta
-    from log_analyzer_mcp.models import ParsedLogEntry, LogLevel
+    from mcp_log_analyzer.models import ParsedLogEntry, LogLevel
 
     base_time = datetime(2024, 1, 15, 10, 0, 0)
 
@@ -326,8 +326,8 @@ def mock_parser():
     """
     from datetime import datetime
     from typing import Iterator
-    from log_analyzer_mcp.models import ParsedLogEntry, LogLevel
-    from log_analyzer_mcp.parsers.base import BaseLogParser
+    from mcp_log_analyzer.models import ParsedLogEntry, LogLevel
+    from mcp_log_analyzer.parsers.base import BaseLogParser
     import re
 
     class MockParser(BaseLogParser):

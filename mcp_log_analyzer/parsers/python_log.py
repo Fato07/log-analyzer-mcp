@@ -4,8 +4,8 @@ import re
 from datetime import datetime
 from typing import ClassVar
 
-from log_analyzer_mcp.models import LogLevel, ParsedLogEntry
-from log_analyzer_mcp.parsers.base import MultiLineParser
+from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
+from mcp_log_analyzer.parsers.base import MultiLineParser
 
 
 class PythonLogParser(MultiLineParser):

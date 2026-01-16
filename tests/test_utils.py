@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from log_analyzer_mcp.utils.time_utils import (
+from mcp_log_analyzer.utils.time_utils import (
     parse_timestamp,
     format_timestamp,
     parse_relative_time,
     time_ago,
     extract_timestamp_from_line,
 )
-from log_analyzer_mcp.utils.file_handler import (
+from mcp_log_analyzer.utils.file_handler import (
     stream_file,
     read_tail,
     detect_encoding,
@@ -21,12 +21,12 @@ from log_analyzer_mcp.utils.file_handler import (
     count_lines,
     get_file_info,
 )
-from log_analyzer_mcp.utils.formatters import (
+from mcp_log_analyzer.utils.formatters import (
     format_as_json,
     format_as_markdown,
     truncate_for_context,
 )
-from log_analyzer_mcp.models import ParsedLogEntry, LogLevel
+from mcp_log_analyzer.models import ParsedLogEntry, LogLevel
 
 
 class TestTimeUtils:

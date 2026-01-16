@@ -5,9 +5,9 @@ import re
 from datetime import datetime, timezone
 from typing import Any, ClassVar
 
-from log_analyzer_mcp.models import LogLevel, ParsedLogEntry
-from log_analyzer_mcp.parsers.base import BaseLogParser
-from log_analyzer_mcp.utils.time_utils import parse_timestamp
+from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
+from mcp_log_analyzer.parsers.base import BaseLogParser
+from mcp_log_analyzer.utils.time_utils import parse_timestamp
 
 
 class KubernetesParser(BaseLogParser):

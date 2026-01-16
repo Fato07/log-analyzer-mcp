@@ -1,22 +1,22 @@
 """Analyzer modules for log processing."""
 
-from log_analyzer_mcp.analyzers.correlator import (
+from mcp_log_analyzer.analyzers.correlator import (
     CorrelationResult,
     CorrelationWindow,
     Correlator,
     StreamingCorrelator,
 )
-from log_analyzer_mcp.analyzers.error_extractor import (
+from mcp_log_analyzer.analyzers.error_extractor import (
     ErrorExtractionResult,
     ErrorExtractor,
     ErrorGroup,
 )
-from log_analyzer_mcp.analyzers.pattern_matcher import (
+from mcp_log_analyzer.analyzers.pattern_matcher import (
     PatternMatcher,
     SearchMatch,
     SearchResult,
 )
-from log_analyzer_mcp.analyzers.summarizer import (
+from mcp_log_analyzer.analyzers.summarizer import (
     LogSummary,
     PerformanceMetrics,
     SecurityIndicators,

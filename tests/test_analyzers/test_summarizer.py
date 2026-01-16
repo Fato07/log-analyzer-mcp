@@ -3,15 +3,15 @@
 import pytest
 from datetime import datetime, timedelta
 
-from log_analyzer_mcp.analyzers.summarizer import (
+from mcp_log_analyzer.analyzers.summarizer import (
     Summarizer,
     LogSummary,
     PerformanceMetrics,
     SecurityIndicators,
     summarize_log,
 )
-from log_analyzer_mcp.models import LogFormat
-from log_analyzer_mcp.parsers.base import ParsedLogEntry
+from mcp_log_analyzer.models import LogFormat
+from mcp_log_analyzer.parsers.base import ParsedLogEntry
 
 
 class TestSummarizer:

@@ -5,8 +5,8 @@ import re
 from datetime import datetime, timezone
 from typing import ClassVar
 
-from log_analyzer_mcp.models import LogLevel, ParsedLogEntry
-from log_analyzer_mcp.parsers.base import BaseLogParser
+from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
+from mcp_log_analyzer.parsers.base import BaseLogParser
 
 
 class DockerParser(BaseLogParser):

@@ -8,21 +8,21 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from log_analyzer_mcp.analyzers import (
+from mcp_log_analyzer.analyzers import (
     Correlator,
     ErrorExtractor,
     Summarizer,
 )
-from log_analyzer_mcp.models import (
+from mcp_log_analyzer.models import (
     LogFormat,
     ParsedLogEntry,
 )
-from log_analyzer_mcp.parsers import (
+from mcp_log_analyzer.parsers import (
     PARSER_REGISTRY,
     detect_format,
     get_parser,
 )
-from log_analyzer_mcp.utils import (
+from mcp_log_analyzer.utils import (
     read_tail,
     stream_file,
 )

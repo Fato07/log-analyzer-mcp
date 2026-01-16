@@ -3,14 +3,14 @@
 import pytest
 from datetime import datetime
 
-from log_analyzer_mcp.analyzers.error_extractor import (
+from mcp_log_analyzer.analyzers.error_extractor import (
     ErrorExtractor,
     ErrorGroup,
     ErrorExtractionResult,
     normalize_error_message,
     extract_errors,
 )
-from log_analyzer_mcp.parsers.base import ParsedLogEntry
+from mcp_log_analyzer.parsers.base import ParsedLogEntry
 
 
 class TestNormalizeErrorMessage:

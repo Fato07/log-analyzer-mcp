@@ -1,6 +1,6 @@
 # Log Analyzer MCP
 
-[![PyPI version](https://badge.fury.io/py/log-analyzer-mcp.svg)](https://badge.fury.io/py/log-analyzer-mcp)
+[![PyPI version](https://badge.fury.io/py/mcp-log-analyzer.svg)](https://badge.fury.io/py/mcp-log-analyzer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -34,12 +34,12 @@ An MCP (Model Context Protocol) server for AI-powered log analysis. Parse, searc
 
 ### pip
 ```bash
-pip install log-analyzer-mcp
+pip install mcp-log-analyzer
 ```
 
 ### uv
 ```bash
-uv tool install log-analyzer-mcp
+uv tool install mcp-log-analyzer
 ```
 
 ### Claude Code
@@ -51,7 +51,7 @@ Add to your `~/.claude/settings.json`:
   "mcpServers": {
     "log-analyzer": {
       "command": "uvx",
-      "args": ["log-analyzer-mcp"]
+      "args": ["mcp-log-analyzer"]
     }
   }
 }
@@ -62,7 +62,7 @@ Or if installed via pip:
 {
   "mcpServers": {
     "log-analyzer": {
-      "command": "log-analyzer-mcp"
+      "command": "mcp-log-analyzer"
     }
   }
 }
@@ -231,7 +231,7 @@ Extract all errors from /var/log/java-app.log, group similar ones
 
 ### Setup
 ```bash
-git clone https://github.com/codesdevs/log-analyzer-mcp
+git clone https://github.com/Fato07/log-analyzer-mcp
 cd log-analyzer-mcp
 uv sync
 ```
@@ -243,17 +243,17 @@ uv run pytest -v --cov
 
 ### Type Checking
 ```bash
-uv run mypy log_analyzer_mcp
+uv run mypy mcp_log_analyzer
 ```
 
 ### Run Locally
 ```bash
-uv run log-analyzer-mcp
+uv run mcp-log-analyzer
 ```
 
 ### Test with MCP Inspector
 ```bash
-npx @modelcontextprotocol/inspector uv run log-analyzer-mcp
+npx @modelcontextprotocol/inspector uv run mcp-log-analyzer
 ```
 
 ## License
@@ -266,9 +266,9 @@ Contributions welcome! Please open an issue or submit a pull request.
 
 ## Links
 
-- [Report bugs](https://github.com/codesdevs/log-analyzer-mcp/issues)
-- [Request features](https://github.com/codesdevs/log-analyzer-mcp/issues)
-- [Discussions](https://github.com/codesdevs/log-analyzer-mcp/discussions)
+- [Report bugs](https://github.com/Fato07/log-analyzer-mcp/issues)
+- [Request features](https://github.com/Fato07/log-analyzer-mcp/issues)
+- [Discussions](https://github.com/Fato07/log-analyzer-mcp/discussions)
 
 ---
 

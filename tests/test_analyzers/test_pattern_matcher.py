@@ -3,13 +3,13 @@
 import pytest
 from datetime import datetime
 
-from log_analyzer_mcp.analyzers.pattern_matcher import (
+from mcp_log_analyzer.analyzers.pattern_matcher import (
     PatternMatcher,
     SearchMatch,
     SearchResult,
     search_pattern,
 )
-from log_analyzer_mcp.parsers.base import ParsedLogEntry
+from mcp_log_analyzer.parsers.base import ParsedLogEntry
 
 
 class TestPatternMatcher:

@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from log_analyzer_mcp.models import LogLevel
-from log_analyzer_mcp.parsers.apache import ApacheAccessParser, ApacheErrorParser
+from mcp_log_analyzer.models import LogLevel
+from mcp_log_analyzer.parsers.apache import ApacheAccessParser, ApacheErrorParser
 
 
 class TestApacheAccessParser:
