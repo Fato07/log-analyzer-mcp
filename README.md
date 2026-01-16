@@ -172,8 +172,9 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 <p align="center">
   <b>Found this useful?</b> Give it a ⭐ on GitHub!<br><br>
-  <a href="https://github.com/Fato07/log-analyzer-mcp/issues">Report bugs</a> ·
-  <a href="https://github.com/Fato07/log-analyzer-mcp/discussions">Request features</a> ·
+  <a href="https://github.com/Fato07/log-analyzer-mcp/issues/new?template=bug_report.yml">Report bugs</a> ·
+  <a href="https://github.com/Fato07/log-analyzer-mcp/issues/new?template=feature_request.yml">Request features</a> ·
+  <a href="https://github.com/Fato07/log-analyzer-mcp/discussions">Discussions</a> ·
   <a href="https://github.com/Fato07/log-analyzer-mcp/blob/main/docs/TOOLS.md">Full docs</a>
 </p>
 

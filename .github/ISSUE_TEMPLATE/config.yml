@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/Fato07/log-analyzer-mcp/discussions/new?category=q-a
+    about: Ask questions or start a discussion (not for bug reports)
+  - name: New Log Format Request
+    url: https://github.com/Fato07/log-analyzer-mcp/discussions/new?category=ideas
+    about: Request support for a new log format
