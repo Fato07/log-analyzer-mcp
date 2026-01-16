@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from mcp_log_analyzer.models import LogLevel
-from mcp_log_analyzer.parsers.generic import GenericParser
+from codesdevs_log_analyzer.models import LogLevel
+from codesdevs_log_analyzer.parsers.generic import GenericParser
 
 
 class TestGenericParser:

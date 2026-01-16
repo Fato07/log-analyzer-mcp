@@ -1,16 +1,16 @@
 """Parser registry and auto-detection for log formats."""
 
-from mcp_log_analyzer.models import LogFormat, ParsedLogEntry
-from mcp_log_analyzer.parsers.apache import ApacheAccessParser, ApacheErrorParser
-from mcp_log_analyzer.parsers.base import BaseLogParser
-from mcp_log_analyzer.parsers.docker import DockerParser
-from mcp_log_analyzer.parsers.generic import GenericParser
-from mcp_log_analyzer.parsers.java import JavaLogParser
-from mcp_log_analyzer.parsers.jsonl import JSONLParser
-from mcp_log_analyzer.parsers.kubernetes import KubernetesParser
-from mcp_log_analyzer.parsers.python_log import PythonLogParser
-from mcp_log_analyzer.parsers.syslog import SyslogParser
-from mcp_log_analyzer.utils.file_handler import stream_file
+from codesdevs_log_analyzer.models import LogFormat, ParsedLogEntry
+from codesdevs_log_analyzer.parsers.apache import ApacheAccessParser, ApacheErrorParser
+from codesdevs_log_analyzer.parsers.base import BaseLogParser
+from codesdevs_log_analyzer.parsers.docker import DockerParser
+from codesdevs_log_analyzer.parsers.generic import GenericParser
+from codesdevs_log_analyzer.parsers.java import JavaLogParser
+from codesdevs_log_analyzer.parsers.jsonl import JSONLParser
+from codesdevs_log_analyzer.parsers.kubernetes import KubernetesParser
+from codesdevs_log_analyzer.parsers.python_log import PythonLogParser
+from codesdevs_log_analyzer.parsers.syslog import SyslogParser
+from codesdevs_log_analyzer.utils.file_handler import stream_file
 
 # Parser registry mapping format names to parser classes
 PARSER_REGISTRY: dict[str, type[BaseLogParser]] = {

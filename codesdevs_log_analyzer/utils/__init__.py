@@ -1,16 +1,16 @@
 """Utility modules for log analysis."""
 
-from mcp_log_analyzer.utils.file_handler import (
+from codesdevs_log_analyzer.utils.file_handler import (
     detect_encoding,
     read_tail,
     stream_file,
 )
-from mcp_log_analyzer.utils.formatters import (
+from codesdevs_log_analyzer.utils.formatters import (
     format_as_json,
     format_as_markdown,
     truncate_for_context,
 )
-from mcp_log_analyzer.utils.time_utils import (
+from codesdevs_log_analyzer.utils.time_utils import (
     format_timestamp,
     parse_relative_time,
     parse_timestamp,

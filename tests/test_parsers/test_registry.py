@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from mcp_log_analyzer.models import LogFormat
-from mcp_log_analyzer.parsers import (
+from codesdevs_log_analyzer.models import LogFormat
+from codesdevs_log_analyzer.parsers import (
     get_parser,
     detect_format,
     detect_format_from_lines,

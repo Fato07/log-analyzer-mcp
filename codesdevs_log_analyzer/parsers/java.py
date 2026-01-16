@@ -4,8 +4,8 @@ import re
 from datetime import datetime
 from typing import ClassVar
 
-from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
-from mcp_log_analyzer.parsers.base import MultiLineParser
+from codesdevs_log_analyzer.models import LogLevel, ParsedLogEntry
+from codesdevs_log_analyzer.parsers.base import MultiLineParser
 
 
 class JavaLogParser(MultiLineParser):

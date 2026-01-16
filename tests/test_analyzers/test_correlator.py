@@ -3,14 +3,14 @@
 import pytest
 from datetime import datetime, timedelta
 
-from mcp_log_analyzer.analyzers.correlator import (
+from codesdevs_log_analyzer.analyzers.correlator import (
     Correlator,
     StreamingCorrelator,
     CorrelationWindow,
     CorrelationResult,
     correlate_events,
 )
-from mcp_log_analyzer.parsers.base import ParsedLogEntry
+from codesdevs_log_analyzer.parsers.base import ParsedLogEntry
 
 
 def create_entry(

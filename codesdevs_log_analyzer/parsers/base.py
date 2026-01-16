@@ -5,8 +5,8 @@ from collections.abc import Iterator
 from datetime import datetime
 from typing import Any, ClassVar
 
-from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
-from mcp_log_analyzer.utils.file_handler import stream_file
+from codesdevs_log_analyzer.models import LogLevel, ParsedLogEntry
+from codesdevs_log_analyzer.utils.file_handler import stream_file
 
 __all__ = ["BaseLogParser", "ParsedLogEntry", "LogLevel"]
 

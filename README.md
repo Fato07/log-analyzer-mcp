@@ -1,6 +1,6 @@
 # Log Analyzer MCP
 
-[![PyPI version](https://badge.fury.io/py/mcp-log-analyzer.svg)](https://badge.fury.io/py/mcp-log-analyzer)
+[![PyPI version](https://badge.fury.io/py/codesdevs-log-analyzer.svg)](https://badge.fury.io/py/codesdevs-log-analyzer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -34,12 +34,12 @@ An MCP (Model Context Protocol) server for AI-powered log analysis. Parse, searc
 
 ### pip
 ```bash
-pip install mcp-log-analyzer
+pip install codesdevs-log-analyzer
 ```
 
 ### uv
 ```bash
-uv tool install mcp-log-analyzer
+uv tool install codesdevs-log-analyzer
 ```
 
 ### Claude Code
@@ -51,7 +51,7 @@ Add to your `~/.claude/settings.json`:
   "mcpServers": {
     "log-analyzer": {
       "command": "uvx",
-      "args": ["mcp-log-analyzer"]
+      "args": ["codesdevs-log-analyzer"]
     }
   }
 }
@@ -62,7 +62,7 @@ Or if installed via pip:
 {
   "mcpServers": {
     "log-analyzer": {
-      "command": "mcp-log-analyzer"
+      "command": "codesdevs-log-analyzer"
     }
   }
 }
@@ -243,17 +243,17 @@ uv run pytest -v --cov
 
 ### Type Checking
 ```bash
-uv run mypy mcp_log_analyzer
+uv run mypy codesdevs_log_analyzer
 ```
 
 ### Run Locally
 ```bash
-uv run mcp-log-analyzer
+uv run codesdevs-log-analyzer
 ```
 
 ### Test with MCP Inspector
 ```bash
-npx @modelcontextprotocol/inspector uv run mcp-log-analyzer
+npx @modelcontextprotocol/inspector uv run codesdevs-log-analyzer
 ```
 
 ## License

@@ -12,7 +12,7 @@ This MCP server provides 7 tools for intelligent log file analysis:
 
 __version__ = "0.1.0"
 
-from mcp_log_analyzer.models import (
+from codesdevs_log_analyzer.models import (
     Anomaly,
     FileInfo,
     LogFormat,
@@ -21,12 +21,12 @@ from mcp_log_analyzer.models import (
     ResponseFormat,
     TimeRange,
 )
-from mcp_log_analyzer.parsers import (
+from codesdevs_log_analyzer.parsers import (
     PARSER_REGISTRY,
     detect_format,
     get_parser,
 )
-from mcp_log_analyzer.server import (
+from codesdevs_log_analyzer.server import (
     log_analyzer_correlate,
     log_analyzer_diff,
     log_analyzer_extract_errors,

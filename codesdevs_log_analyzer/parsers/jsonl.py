@@ -4,9 +4,9 @@ import json
 from datetime import datetime
 from typing import Any, ClassVar
 
-from mcp_log_analyzer.models import LogLevel, ParsedLogEntry
-from mcp_log_analyzer.parsers.base import BaseLogParser
-from mcp_log_analyzer.utils.time_utils import parse_timestamp
+from codesdevs_log_analyzer.models import LogLevel, ParsedLogEntry
+from codesdevs_log_analyzer.parsers.base import BaseLogParser
+from codesdevs_log_analyzer.utils.time_utils import parse_timestamp
 
 
 class JSONLParser(BaseLogParser):
