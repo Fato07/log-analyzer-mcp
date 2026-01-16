@@ -1,5 +1,7 @@
 # Log Analyzer MCP
 
+<!-- mcp-name: io.github.fato07/log-analyzer-mcp -->
+
 [![PyPI version](https://badge.fury.io/py/codesdevs-log-analyzer.svg)](https://badge.fury.io/py/codesdevs-log-analyzer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
