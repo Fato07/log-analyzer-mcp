@@ -51,3 +51,8 @@ Thumbs.db
 # Logs (keep test_logs/ but ignore generated logs)
 *.log
 !test_logs/*.log
+
+# Internal development docs (keep local, don't push)
+CLAUDE.md
+SPEC.md
+specs/
