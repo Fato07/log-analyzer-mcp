@@ -9,6 +9,8 @@ import json
 import sys
 from pathlib import Path
 
+# Support both config locations
+CLAUDE_JSON = Path.home() / ".claude.json"
 CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 
 MCP_CONFIG = {
@@ -17,11 +19,27 @@ MCP_CONFIG = {
 }
 
 
+def get_config_path() -> Path:
+    """Get the Claude Code config file path.
+
+    Checks both possible locations and returns the one that exists.
+    If neither exists, defaults to ~/.claude.json (more common).
+    """
+    if CLAUDE_JSON.exists():
+        return CLAUDE_JSON
+    if CLAUDE_SETTINGS.exists():
+        return CLAUDE_SETTINGS
+    # Default to ~/.claude.json if neither exists
+    return CLAUDE_JSON
+
+
 def install() -> None:
     """Add MCP server to Claude Code settings."""
+    config_path = get_config_path()
+
     settings: dict[str, object] = {}
-    if CLAUDE_SETTINGS.exists():
-        settings = json.loads(CLAUDE_SETTINGS.read_text())
+    if config_path.exists():
+        settings = json.loads(config_path.read_text())
 
     if "mcpServers" not in settings:
         settings["mcpServers"] = {}
@@ -30,26 +48,28 @@ def install() -> None:
     if isinstance(mcp_servers, dict):
         mcp_servers["log-analyzer"] = MCP_CONFIG
 
-    CLAUDE_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-    CLAUDE_SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(settings, indent=2) + "\n")
 
-    print("✓ Added log-analyzer to Claude Code")
+    print(f"✓ Added log-analyzer to {config_path}")
     print("  Restart Claude Code to use the new MCP server")
 
 
 def uninstall() -> None:
     """Remove MCP server from Claude Code settings."""
-    if not CLAUDE_SETTINGS.exists():
+    config_path = get_config_path()
+
+    if not config_path.exists():
         print("No Claude Code settings found")
         return
 
-    settings = json.loads(CLAUDE_SETTINGS.read_text())
+    settings = json.loads(config_path.read_text())
     mcp_servers = settings.get("mcpServers", {})
 
     if isinstance(mcp_servers, dict) and "log-analyzer" in mcp_servers:
         del mcp_servers["log-analyzer"]
-        CLAUDE_SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
-        print("✓ Removed log-analyzer from Claude Code")
+        config_path.write_text(json.dumps(settings, indent=2) + "\n")
+        print(f"✓ Removed log-analyzer from {config_path}")
     else:
         print("log-analyzer not found in settings")
 
