@@ -2,6 +2,7 @@
 
 <!-- mcp-name: io.github.Fato07/log-analyzer-mcp -->
 
+[![MCP Registry](https://img.shields.io/badge/MCP-Registry-green?logo=anthropic)](https://registry.modelcontextprotocol.io/servers/io.github.Fato07/log-analyzer-mcp)
 [![PyPI version](https://badge.fury.io/py/codesdevs-log-analyzer.svg)](https://badge.fury.io/py/codesdevs-log-analyzer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)

@@ -7,21 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.2] - 2026-01-16
 
+### Added
+
+- Published to official MCP Registry at https://registry.modelcontextprotocol.io
+- Added MCP Registry badge to README
+- Added `mcp-name` comment to README for registry validation
+
 ### Changed
 
-- (Add your changes here)
+- Fixed mcp-name case to match GitHub username exactly (Fato07)
 
 ## [0.4.1] - 2026-01-16
 
-### Changed
+### Added
 
-- (Add your changes here)
+- Added `mcp-name` comment to README for MCP Registry validation
+- Created `server.json` for MCP Registry publishing
+- Added `[tool.mcp]` section to pyproject.toml
 
 ## [0.4.0] - 2026-01-16
 
-### Changed
+### Added
 
-- (Add your changes here)
+- Release automation with Makefile and scripts/release.py
+- Added `release.sh` wrapper script for version bumping
 
 ## [0.3.1] - 2026-01-16
 
