@@ -1,3 +1,5 @@
+
+
 # Log Analyzer MCP
 
 <!-- mcp-name: io.github.Fato07/log-analyzer-mcp -->
@@ -100,6 +102,7 @@ Add to `~/.claude/settings.json`:
 |--------|---------|
 | Syslog | `Jan 15 10:30:00 hostname process[pid]: message` |
 | Apache/Nginx | `127.0.0.1 - - [15/Jan/2026:10:30:00] "GET /path" 200` |
+| Apache/Nginx error | `[Thu Jan 15 10:30:00.123456 2026] [error] [pid 1234] message` |
 | JSON Lines | `{"timestamp": "...", "level": "ERROR", "message": "..."}` |
 | Docker | `2026-01-15T10:30:00.123Z stdout message` |
 | Python | `2026-01-15 10:30:00,123 - module - ERROR - message` |
